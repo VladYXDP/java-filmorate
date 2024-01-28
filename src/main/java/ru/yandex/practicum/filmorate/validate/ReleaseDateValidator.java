@@ -8,10 +8,10 @@ import java.time.LocalDate;
 
 public class ReleaseDateValidator implements ConstraintValidator<ReleaseValidation, LocalDate> {
 
-    private final LocalDate MIN_DATE = LocalDate.of(1895, 12, 28);
+    private final LocalDate minDate = LocalDate.of(1895, 12, 28);
 
     @Override
     public boolean isValid(LocalDate releaseDate, ConstraintValidatorContext constraintValidatorContext) {
-        return MIN_DATE.isBefore(releaseDate);
+        return minDate.isBefore(releaseDate);
     }
 }
