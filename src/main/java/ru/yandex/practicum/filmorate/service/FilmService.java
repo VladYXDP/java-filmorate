@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.film.UpdateFilmException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.ArrayList;
@@ -16,14 +17,16 @@ public class FilmService {
 
     public Film addFilm(Film film) {
         film.setId(++index);
-        return films.put(film.getId(), film);
+        films.put(film.getId(), film);
+        return film;
     }
 
     public Film updateFilm(Film film) {
         if (film != null && films.containsKey(film.getId())) {
-            return films.replace(film.getId(), film);
+            films.replace(film.getId(), film);
+            return film;
         } else {
-            throw new RuntimeException("Ошибка обновления фильма!");
+            throw new UpdateFilmException("Ошибка обновления фильма!");
         }
     }
 

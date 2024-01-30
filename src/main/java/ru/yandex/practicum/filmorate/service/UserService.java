@@ -22,7 +22,8 @@ public class UserService {
                 user.setName(user.getLogin());
             }
             user.setId(++index);
-            return users.put(user.getId(), user);
+            users.put(user.getId(), user);
+            return user;
         } else {
             throw new AddUserException("Ошибка добавления пользователя!");
         }
@@ -33,7 +34,8 @@ public class UserService {
             if (user.getName().isEmpty()) {
                 user.setName(user.getLogin());
             }
-            return users.replace(user.getId(), user);
+            users.replace(user.getId(), user);
+            return user;
         } else {
             throw new UpdateUserException("Ошибка обновления пользователя!");
         }

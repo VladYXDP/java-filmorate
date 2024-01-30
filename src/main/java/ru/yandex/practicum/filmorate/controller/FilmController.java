@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.FilmDtoTransfer;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.film.UpdateFilmException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -22,32 +23,24 @@ public class FilmController {
     private final FilmService filmService;
     private final FilmDtoTransfer filmDtoTransfer;
 
+    @ExceptionHandler(ValidationException.class)
     @PostMapping
-
     public FilmDto addFilm(@Valid @RequestBody FilmDto filmDto) {
-        Film film = null;
-        try {
-            if (filmDto != null && !filmDto.getDuration().isNegative()) {
-                film = filmService.addFilm(filmDtoTransfer.dtoToFilm(filmDto));
-                log.info("Фильм " + film.getName() + "успешно добавлен!");
-            } else {
-                throw new ValidationException("Продолжительность фильма не должна быть меньше нуля!");
-            }
-        } catch (ValidationException e) {
-            log.error("Ошибка валидации! " + e.getMessage());
+        Film film;
+        if (filmDto != null && !filmDto.getDuration().isNegative()) {
+            film = filmService.addFilm(filmDtoTransfer.dtoToFilm(filmDto));
+            log.info("Фильм " + film.getName() + "успешно добавлен!");
+        } else {
+            throw new ValidationException("Продолжительность фильма не должна быть меньше нуля!");
         }
         return filmDtoTransfer.filmToDto(film);
     }
 
+    @ExceptionHandler(UpdateFilmException.class)
     @PutMapping
     public FilmDto updateFilm(@Valid @RequestBody FilmDto filmDto) {
-        Film film = null;
-        try {
-            film = filmService.updateFilm(filmDtoTransfer.dtoToFilm(filmDto));
-            log.info("Фильм " + film.getName() + " успешно обновлён!");
-        } catch (ValidationException e) {
-            log.error("Ошибка валидации! " + e.getMessage());
-        }
+        Film film = filmService.updateFilm(filmDtoTransfer.dtoToFilm(filmDto));
+        log.info("Фильм " + film.getName() + " успешно обновлён!");
         return filmDtoTransfer.filmToDto(film);
     }
 
