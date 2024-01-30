@@ -15,19 +15,15 @@ public class FilmService {
     private static int index = 0;
 
     public Film addFilm(Film film) {
-        if (film != null && !film.getDuration().isNegative()) {
-            film.setId(++index);
-            return films.put(film.getId(), film);
-        } else {
-            throw new RuntimeException("Ошибка добавления фильма");
-        }
+        film.setId(++index);
+        return films.put(film.getId(), film);
     }
 
     public Film updateFilm(Film film) {
         if (film != null && films.containsKey(film.getId())) {
             return films.replace(film.getId(), film);
         } else {
-            throw new RuntimeException("Ошибка обновления фильма");
+            throw new RuntimeException("Ошибка обновления фильма!");
         }
     }
 

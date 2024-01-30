@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.user.AddUserException;
+import ru.yandex.practicum.filmorate.exception.user.UpdateUserException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ public class UserService {
             user.setId(++index);
             return users.put(user.getId(), user);
         } else {
-            throw new RuntimeException("Ошибка добавления пользователя");
+            throw new AddUserException("Ошибка добавления пользователя!");
         }
     }
 
@@ -33,7 +35,7 @@ public class UserService {
             }
             return users.replace(user.getId(), user);
         } else {
-            throw new RuntimeException("Ошибка обновления пользователя");
+            throw new UpdateUserException("Ошибка обновления пользователя!");
         }
     }
 
