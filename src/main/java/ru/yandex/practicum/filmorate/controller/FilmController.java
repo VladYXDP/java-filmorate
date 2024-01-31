@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
-import ru.yandex.practicum.filmorate.dto.FilmDtoTransfer;
+import ru.yandex.practicum.filmorate.dto.FilmDtoMapper;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.exception.film.UpdateFilmException;
+import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class FilmController {
 
     private final FilmService filmService;
-    private final FilmDtoTransfer filmDtoTransfer;
+    private final FilmDtoMapper filmDtoTransfer;
 
     @ExceptionHandler(ValidationException.class)
     @PostMapping
@@ -36,7 +36,7 @@ public class FilmController {
         return filmDtoTransfer.filmToDto(film);
     }
 
-    @ExceptionHandler(UpdateFilmException.class)
+    @ExceptionHandler(FilmNotFoundException.class)
     @PutMapping
     public FilmDto updateFilm(@Valid @RequestBody FilmDto filmDto) {
         Film film = filmService.updateFilm(filmDtoTransfer.dtoToFilm(filmDto));

@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.film.UpdateFilmException;
+import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class FilmService {
             films.replace(film.getId(), film);
             return film;
         } else {
-            throw new UpdateFilmException("Ошибка обновления фильма!");
+            throw new FilmNotFoundException("Ошибка обновления фильма!");
         }
     }
 

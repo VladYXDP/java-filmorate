@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
 @Component
-public class FilmDtoTransfer {
+public class FilmDtoMapper {
 
     public Film dtoToFilm(FilmDto filmDto) {
         Film film = new Film();

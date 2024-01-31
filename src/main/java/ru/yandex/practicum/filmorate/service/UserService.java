@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.user.AddUserException;
-import ru.yandex.practicum.filmorate.exception.user.UpdateUserException;
+import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
+import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class UserService {
             users.put(user.getId(), user);
             return user;
         } else {
-            throw new AddUserException("Ошибка добавления пользователя!");
+            throw new UserAlreadyExistException("Ошибка добавления пользователя!");
         }
     }
 
@@ -37,7 +37,7 @@ public class UserService {
             users.replace(user.getId(), user);
             return user;
         } else {
-            throw new UpdateUserException("Ошибка обновления пользователя!");
+            throw new UserNotFoundException("Ошибка обновления пользователя!");
         }
     }
 

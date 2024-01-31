@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.UserDto;
-import ru.yandex.practicum.filmorate.dto.UserDtoTransfer;
-import ru.yandex.practicum.filmorate.exception.user.AddUserException;
-import ru.yandex.practicum.filmorate.exception.user.UpdateUserException;
+import ru.yandex.practicum.filmorate.dto.UserDtoMapper;
+import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
+import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -21,9 +21,9 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
-    private final UserDtoTransfer userDtoTransfer;
+    private final UserDtoMapper userDtoTransfer;
 
-    @ExceptionHandler(AddUserException.class)
+    @ExceptionHandler(UserAlreadyExistException.class)
     @PostMapping
     public UserDto addUser(@Valid @RequestBody UserDto userDto) {
         User user = userService.addUser(userDtoTransfer.dtoToUser(userDto));
@@ -31,7 +31,7 @@ public class UserController {
         return userDtoTransfer.userToDto(user);
     }
 
-    @ExceptionHandler(UpdateUserException.class)
+    @ExceptionHandler(UserNotFoundException.class)
     @PutMapping
     public UserDto updateUser(@Valid @RequestBody UserDto userDto) {
         User user = userService.updateUser(userDtoTransfer.dtoToUser(userDto));

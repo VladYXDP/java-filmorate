@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
 @Component
-public class UserDtoTransfer {
+public class UserDtoMapper {
 
     public User dtoToUser(UserDto userDto) {
         User user = new User();
