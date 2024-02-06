@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +45,37 @@ public class UserController {
     public List<UserDto> getAllUser() {
         log.info("Получен список всех пользователей!");
         return userService.getAllUsers()
+                .stream()
+                .map(userDtoTransfer::userToDto)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}")
+    public UserDto getUser(@PathVariable int id) {
+        return userDtoTransfer.userToDto(userService.getUserById(id));
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addToFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.becomeToFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friend/{friendId}")
+    public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
+        userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<UserDto> getFriends(@PathVariable int id) {
+        return userService.getAllUsers().get(id).getFriends()
+                .stream()
+                .map(userDtoTransfer::userToDto)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<UserDto> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        return userService.getCommonsFriend(id, otherId)
                 .stream()
                 .map(userDtoTransfer::userToDto)
                 .collect(Collectors.toList());

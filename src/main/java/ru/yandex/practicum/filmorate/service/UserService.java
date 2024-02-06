@@ -73,13 +73,13 @@ public class UserService {
         }
     }
 
-    public List<User> getCommonsFriend(User user, User friend) {
-        Set<User> userFriends = new HashSet<>(user.getFriends());
-        userFriends.retainAll(friend.getFriends());
+    public List<User> getCommonsFriend(int id, int otherId) {
+        Set<User> userFriends = new HashSet<>(getUserById(id).getFriends());
+        userFriends.retainAll(getUserById(otherId).getFriends());
         return new ArrayList<>(userFriends);
     }
 
-    private User getUserById(int userId) {
+    public User getUserById(int userId) {
         if (userStorage.getAllUser().containsKey(userId)) {
             return userStorage.getAllUser().get(userId);
         } else {
@@ -89,5 +89,9 @@ public class UserService {
 
     private boolean isNotFriends(User user, User friend) {
         return !user.getFriends().contains(friend);
+    }
+
+    public List<User> getAllUsers() {
+        return new ArrayList<>(userStorage.getAllUser().values());
     }
 }
