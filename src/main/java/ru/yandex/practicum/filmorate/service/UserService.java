@@ -51,35 +51,37 @@ public class UserService {
         }
     }
 
-    public void becomeToFriend(int userId, int friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        if (isNotFriends(user, friend)) {
-            user.getFriends().add(friend);
-            friend.getFriends().add(friend);
+    public void becomeToFriend(long userId, long friendId) {
+        if (isNotFriends(userId, friendId)) {
+            getUserById(userId).getFriends().add(friendId);
+            getUserById(friendId).getFriends().add(userId);
         } else {
             throw new UserAlreadyExistException("Пользователи уже являются друзьями!");
         }
     }
 
-    public void removeFriend(int userId, int friendId) {
+    public void removeFriend(long userId, long friendId) {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
-        if (isNotFriends(user, friend)) {
+        if (isNotFriends(userId, friendId)) {
             throw new UserNotFoundException(("Ошибка удаления из друзей! Пользователи не были друзьями!"));
         } else {
-            user.getFriends().remove(friend);
-            friend.getFriends().remove(user);
+            user.getFriends().remove(friend.getId());
+            friend.getFriends().remove(user.getId());
         }
     }
 
-    public List<User> getCommonsFriend(int id, int otherId) {
-        Set<User> userFriends = new HashSet<>(getUserById(id).getFriends());
+    public List<User> getCommonsFriend(long id, long otherId) {
+        List<User> users = new ArrayList<>();
+        Set<Long> userFriends = new HashSet<>(getUserById(id).getFriends());
         userFriends.retainAll(getUserById(otherId).getFriends());
-        return new ArrayList<>(userFriends);
+        for (Long friendId : userFriends) {
+            users.add(getUserById(friendId));
+        }
+        return users;
     }
 
-    public User getUserById(int userId) {
+    public User getUserById(long userId) {
         if (userStorage.getAllUser().containsKey(userId)) {
             return userStorage.getAllUser().get(userId);
         } else {
@@ -87,8 +89,14 @@ public class UserService {
         }
     }
 
-    private boolean isNotFriends(User user, User friend) {
-        return !user.getFriends().contains(friend);
+    public List<User> getUserFriends(long userId) {
+        List<User> friend = new ArrayList<>();
+        getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(userId)));
+        return friend;
+    }
+
+    private boolean isNotFriends(long user, long friend) {
+        return !getUserById(user).getFriends().contains(friend);
     }
 
     public List<User> getAllUsers() {
