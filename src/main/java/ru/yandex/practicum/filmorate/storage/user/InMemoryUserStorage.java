@@ -38,7 +38,7 @@ public class InMemoryUserStorage implements UserStorage {
             users.replace(user.getId(), oldUser, user);
             return oldUser;
         } else {
-            throw new UserNotFoundException("Ошибка обновления данных о пользователе с email - " + user.getEmail() + "" +
+            throw new UserNotFoundException("Ошибка обновления данных о пользователе с id - " + user.getId() + "" +
                     "! Пользователь не найден!");
         }
     }

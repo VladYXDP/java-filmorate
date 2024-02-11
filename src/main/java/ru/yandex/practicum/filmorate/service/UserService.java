@@ -43,7 +43,7 @@ public class UserService {
         }
     }
 
-    public User delete(User user) {
+    public User deleteUser(User user) {
         if (user != null) {
             return userStorage.delete(user);
         } else {

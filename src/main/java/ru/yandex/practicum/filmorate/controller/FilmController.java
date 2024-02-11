@@ -52,4 +52,22 @@ public class FilmController {
                 .map(filmDtoTransfer::filmToDto)
                 .collect(Collectors.toList());
     }
+
+    @PutMapping("/{id}/like/{userId}")
+    public void likeFilm(@PathVariable long id, @PathVariable long userId) {
+        log.info("Пользователь с id " + userId + " поставил лайк фильму " + filmService.getFilmById(id));
+        filmService.likeFilm(userId, id);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteLike(@PathVariable long id, @PathVariable long userId) {
+        log.info("Пользователь с id " + userId + "удаляет лайк с фильма " + filmService.getFilmById(id));
+        filmService.deleteLike(userId, id);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+        log.info("Вывод " + count + " популярных фильмов");
+        return filmService.getPopularFilms(count);
+    }
 }
