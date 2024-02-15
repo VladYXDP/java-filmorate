@@ -57,7 +57,7 @@ public class FilmService {
         if (filmStorage.getAllFilms().containsKey(filmId)) {
             filmStorage.getAllFilms().remove(userId);
         } else {
-            throw new FilmNotFoundException("Ошибка удаления фильма! Фильм с id " + filmId + " не найден!");
+            throw new FilmNotFoundException("Ошибка удаления лайка! Фильм с id " + filmId + " не найден!");
         }
     }
 
@@ -69,7 +69,7 @@ public class FilmService {
         if (filmStorage.getAllFilms().containsKey(id)) {
             return filmStorage.getAllFilms().get(id);
         } else {
-            throw new FilmNotFoundException("Фильма с id " + id + " не найден!");
+            throw new FilmNotFoundException("Фильм с id " + id + " не найден!");
         }
     }
 

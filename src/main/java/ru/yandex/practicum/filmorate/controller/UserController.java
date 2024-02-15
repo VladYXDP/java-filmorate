@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.dto.UserDtoMapper;
-import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
-import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -23,7 +21,6 @@ public class UserController {
     private final UserService userService;
     private final UserDtoMapper userDtoTransfer;
 
-    @ExceptionHandler(UserAlreadyExistException.class)
     @PostMapping
     public UserDto addUser(@Valid @RequestBody UserDto userDto) {
         User user = userService.addUser(userDtoTransfer.dtoToUser(userDto));
@@ -31,7 +28,6 @@ public class UserController {
         return userDtoTransfer.userToDto(user);
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
     @PutMapping
     public UserDto updateUser(@Valid @RequestBody UserDto userDto) {
         User user = userService.updateUser(userDtoTransfer.dtoToUser(userDto));
@@ -55,16 +51,18 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addToFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.info("Пользователь с id " + id + " стал другом пользователя с id " + friendId);
         userService.becomeToFriend(id, friendId);
     }
 
-    @DeleteMapping("/{id}/friend/{friendId}")
+    @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
         userService.removeFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public List<UserDto> getFriends(@PathVariable int id) {
+        log.info("Получить всех друзей пользователя с id " + id);
         return userService.getUserFriends(id)
                 .stream()
                 .map(userDtoTransfer::userToDto)
@@ -73,6 +71,7 @@ public class UserController {
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<UserDto> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        log.info("Получить общих друзей пользователя с id " + id + " и другого пользователя с id " + otherId);
         return userService.getCommonsFriend(id, otherId)
                 .stream()
                 .map(userDtoTransfer::userToDto)

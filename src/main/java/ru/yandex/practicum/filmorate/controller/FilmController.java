@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.FilmDtoMapper;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -23,7 +22,6 @@ public class FilmController {
     private final FilmService filmService;
     private final FilmDtoMapper filmDtoTransfer;
 
-    @ExceptionHandler(ValidationException.class)
     @PostMapping
     public FilmDto addFilm(@Valid @RequestBody FilmDto filmDto) {
         Film film;
@@ -36,12 +34,17 @@ public class FilmController {
         return filmDtoTransfer.filmToDto(film);
     }
 
-    @ExceptionHandler(FilmNotFoundException.class)
     @PutMapping
     public FilmDto updateFilm(@Valid @RequestBody FilmDto filmDto) {
         Film film = filmService.updateFilm(filmDtoTransfer.dtoToFilm(filmDto));
         log.info("Фильм " + film.getName() + " успешно обновлён!");
         return filmDtoTransfer.filmToDto(film);
+    }
+
+    @GetMapping("/{id}")
+    public FilmDto getFilm(@PathVariable long id) {
+        log.info("Получить фильм с id " + id);
+        return filmDtoTransfer.filmToDto(filmService.getFilmById(id));
     }
 
     @GetMapping
@@ -55,19 +58,21 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void likeFilm(@PathVariable long id, @PathVariable long userId) {
-        log.info("Пользователь с id " + userId + " поставил лайк фильму " + filmService.getFilmById(id));
+        log.info("Пользователь с id " + userId + " поставил лайк фильму с id " + id);
         filmService.likeFilm(userId, id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable long id, @PathVariable long userId) {
-        log.info("Пользователь с id " + userId + "удаляет лайк с фильма " + filmService.getFilmById(id));
+        log.info("Пользователь с id " + userId + "удаляет лайк с фильма с id " + id);
         filmService.deleteLike(userId, id);
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+    public List<FilmDto> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
         log.info("Вывод " + count + " популярных фильмов");
-        return filmService.getPopularFilms(count);
+        return filmService.getPopularFilms(count).stream()
+                .map(filmDtoTransfer::filmToDto)
+                .collect(Collectors.toList());
     }
 }

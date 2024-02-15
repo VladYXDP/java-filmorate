@@ -52,11 +52,15 @@ public class UserService {
     }
 
     public void becomeToFriend(long userId, long friendId) {
-        if (isNotFriends(userId, friendId)) {
-            getUserById(userId).getFriends().add(friendId);
-            getUserById(friendId).getFriends().add(userId);
+        if (friendId > 0) {
+            if (isNotFriends(userId, friendId)) {
+                getUserById(userId).getFriends().add(friendId);
+                getUserById(friendId).getFriends().add(userId);
+            } else {
+                throw new UserAlreadyExistException("Пользователи уже являются друзьями!");
+            }
         } else {
-            throw new UserAlreadyExistException("Пользователи уже являются друзьями!");
+            throw new UserNotFoundException("Неверный формат параметра friendId " + friendId);
         }
     }
 
@@ -91,7 +95,9 @@ public class UserService {
 
     public List<User> getUserFriends(long userId) {
         List<User> friend = new ArrayList<>();
-        getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(userId)));
+        getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(it)));
+        if (friend.isEmpty())
+            throw new UserNotFoundException("Список друзей у пользователя с id " + userId + " пуст!");
         return friend;
     }
 

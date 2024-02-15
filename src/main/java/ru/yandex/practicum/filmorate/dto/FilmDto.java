@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @Data
 public class FilmDto {
 
-    private int id;
+    private long id;
     @NotBlank
     private String name;
     @Size(max = 200, message = "Описание не должно быть больше 200 символов")
