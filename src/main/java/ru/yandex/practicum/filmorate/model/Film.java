@@ -17,4 +17,16 @@ public class Film {
     private Duration duration;
 
     private Set<Long> likes = new HashSet<>();
+
+    private Long popular = 0L;
+
+    public void addLike(long userId) {
+        likes.add(userId);
+        popular++;
+    }
+
+    public void deleteLike(long userId) {
+        likes.remove(userId);
+        popular--;
+    }
 }

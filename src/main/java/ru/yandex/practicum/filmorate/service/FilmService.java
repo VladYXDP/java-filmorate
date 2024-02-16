@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.film.FilmIsNullException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
+import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
@@ -47,7 +48,7 @@ public class FilmService {
 
     public void likeFilm(long userId, long filmId) {
         if (filmStorage.getAllFilms().containsKey(filmId)) {
-            filmStorage.getAllFilms().get(filmId).getLikes().add(userId);
+            filmStorage.getAllFilms().get(filmId).addLike(userId);
         } else {
             throw new FilmNotFoundException("Фильм с id " + filmId + " не найден!");
         }
@@ -55,7 +56,11 @@ public class FilmService {
 
     public void deleteLike(long userId, long filmId) {
         if (filmStorage.getAllFilms().containsKey(filmId)) {
-            filmStorage.getAllFilms().remove(userId);
+            if (filmStorage.getAllFilms().get(filmId).getLikes().contains(userId)) {
+                filmStorage.getAllFilms().get(filmId).deleteLike(userId);
+            } else {
+                throw new UserNotFoundException("Не удалось удалить лайк пользователя с id " + userId);
+            }
         } else {
             throw new FilmNotFoundException("Ошибка удаления лайка! Фильм с id " + filmId + " не найден!");
         }
@@ -75,7 +80,7 @@ public class FilmService {
 
     public List<Film> getPopularFilms(int count) {
         return getAllFilms().stream()
-                .sorted(Comparator.comparingInt(f -> f.getLikes().size()))
+                .sorted(Comparator.comparing(Film::getPopular).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
     }
