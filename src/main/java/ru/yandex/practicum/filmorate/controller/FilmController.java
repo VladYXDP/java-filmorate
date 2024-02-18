@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.FilmDtoMapper;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -23,8 +24,13 @@ public class FilmController {
 
     @PostMapping
     public FilmDto addFilm(@Valid @RequestBody FilmDto filmDto) {
-        Film film = filmService.addFilm(filmDtoTransfer.dtoToFilm(filmDto));
-        log.info(String.format("Фильм %s успешно добавлен!", film.getName()));
+        Film film;
+        if (filmDto != null && !filmDto.getDuration().isNegative()) {
+            film = filmService.addFilm(filmDtoTransfer.dtoToFilm(filmDto));
+            log.info(String.format("Фильм %s успешно добавлен!", film.getName()));
+        } else {
+            throw new ValidationException("Продолжительность фильма не должна быть меньше нуля!");
+        }
         return filmDtoTransfer.filmToDto(film);
     }
 

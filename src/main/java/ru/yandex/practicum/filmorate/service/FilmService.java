@@ -73,7 +73,11 @@ public class FilmService {
     }
 
     public Film getFilmById(long id) {
-        return filmStorage.getAllFilms().get(id);
+        if (filmStorage.getAllFilms().containsKey(id)) {
+            return filmStorage.getAllFilms().get(id);
+        } else {
+            throw new FilmNotFoundException(String.format("Фильм с id %d не найден!", id));
+        }
     }
 
     public List<Film> getPopularFilms(int count) {
