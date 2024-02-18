@@ -24,14 +24,14 @@ public class UserController {
     @PostMapping
     public UserDto addUser(@Valid @RequestBody UserDto userDto) {
         User user = userService.addUser(userDtoTransfer.dtoToUser(userDto));
-        log.info("Пользователь " + user.getName() + " добавлен!");
+        log.info(String.format("Пользователь %s добавлен!", user.getName()));
         return userDtoTransfer.userToDto(user);
     }
 
     @PutMapping
     public UserDto updateUser(@Valid @RequestBody UserDto userDto) {
         User user = userService.updateUser(userDtoTransfer.dtoToUser(userDto));
-        log.info("Пользователь " + user.getName() + " обновлён!");
+        log.info(String.format("Пользователь %s обновлён!", user.getName()));
         return userDtoTransfer.userToDto(user);
     }
 
@@ -46,23 +46,25 @@ public class UserController {
 
     @GetMapping("/{id}")
     public UserDto getUser(@PathVariable int id) {
+        log.info(String.format("Получение пользователя с %d с id", id));
         return userDtoTransfer.userToDto(userService.getUserById(id));
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addToFriend(@PathVariable int id, @PathVariable int friendId) {
-        log.info("Пользователь с id " + id + " стал другом пользователя с id " + friendId);
+        log.info(String.format("Пользователь с id %d стал другом пользователя с id %d", id, friendId));
         userService.becomeToFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
+        log.info(String.format("Пользователь с id %d удалил из друзей пользователя с id %d", id, friendId));
         userService.removeFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public List<UserDto> getFriends(@PathVariable int id) {
-        log.info("Получить всех друзей пользователя с id " + id);
+        log.info(String.format("Получить всех друзей пользователя с id %d", id));
         return userService.getUserFriends(id)
                 .stream()
                 .map(userDtoTransfer::userToDto)
@@ -71,7 +73,7 @@ public class UserController {
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<UserDto> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        log.info("Получить общих друзей пользователя с id " + id + " и другого пользователя с id " + otherId);
+        log.info(String.format("Получить общих друзей пользователя с id %d и другого пользователя с id %d", id, otherId));
         return userService.getCommonsFriend(id, otherId)
                 .stream()
                 .map(userDtoTransfer::userToDto)

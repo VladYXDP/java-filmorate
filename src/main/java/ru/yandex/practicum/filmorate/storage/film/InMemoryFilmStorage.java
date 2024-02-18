@@ -12,7 +12,7 @@ import java.util.Map;
 public class InMemoryFilmStorage implements FilmStorage {
 
     private final Map<Long, Film> films = new HashMap<>();
-    private static long index = 0;
+    private long index = 0;
 
     @Override
     public Film add(Film film) {

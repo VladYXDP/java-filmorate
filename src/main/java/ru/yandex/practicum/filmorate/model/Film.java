@@ -15,18 +15,16 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Duration duration;
-
     private Set<Long> likes = new HashSet<>();
-
-    private Long popular = 0L;
+    private Long likesCount = 0L;
 
     public void addLike(long userId) {
         likes.add(userId);
-        popular++;
+        likesCount++;
     }
 
     public void deleteLike(long userId) {
         likes.remove(userId);
-        popular--;
+        likesCount--;
     }
 }

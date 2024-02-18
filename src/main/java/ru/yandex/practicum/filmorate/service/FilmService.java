@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class FilmService {
 
     private final FilmStorage filmStorage;
+    private final UserService userService;
 
     public Film addFilm(Film film) {
         if (film != null) {
@@ -48,21 +49,22 @@ public class FilmService {
 
     public void likeFilm(long userId, long filmId) {
         if (filmStorage.getAllFilms().containsKey(filmId)) {
+            userService.getUserById(userId);
             filmStorage.getAllFilms().get(filmId).addLike(userId);
         } else {
-            throw new FilmNotFoundException("Фильм с id " + filmId + " не найден!");
+            throw new FilmNotFoundException(String.format("Фильм с id %d не найден!", filmId));
         }
     }
 
     public void deleteLike(long userId, long filmId) {
         if (filmStorage.getAllFilms().containsKey(filmId)) {
-            if (filmStorage.getAllFilms().get(filmId).getLikes().contains(userId)) {
+            if (filmStorage.getAllFilms().get(filmId).getLikes().contains(userId) || userService.getUserById(userId) == null) {
                 filmStorage.getAllFilms().get(filmId).deleteLike(userId);
             } else {
-                throw new UserNotFoundException("Не удалось удалить лайк пользователя с id " + userId);
+                throw new UserNotFoundException(String.format("Не удалось удалить лайк пользователя с id %d", userId));
             }
         } else {
-            throw new FilmNotFoundException("Ошибка удаления лайка! Фильм с id " + filmId + " не найден!");
+            throw new FilmNotFoundException(String.format("Ошибка удаления лайка! Фильм с id %d не найден!", filmId));
         }
     }
 
@@ -71,16 +73,12 @@ public class FilmService {
     }
 
     public Film getFilmById(long id) {
-        if (filmStorage.getAllFilms().containsKey(id)) {
-            return filmStorage.getAllFilms().get(id);
-        } else {
-            throw new FilmNotFoundException("Фильм с id " + id + " не найден!");
-        }
+        return filmStorage.getAllFilms().get(id);
     }
 
     public List<Film> getPopularFilms(int count) {
         return getAllFilms().stream()
-                .sorted(Comparator.comparing(Film::getPopular).reversed())
+                .sorted(Comparator.comparing(Film::getLikesCount).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
     }

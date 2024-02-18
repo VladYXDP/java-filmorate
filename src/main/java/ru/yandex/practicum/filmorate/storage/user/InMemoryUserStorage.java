@@ -11,7 +11,7 @@ import java.util.Map;
 public class InMemoryUserStorage implements UserStorage {
 
     private final Map<Long, User> users = new HashMap<>();
-    private static long index = 0;
+    private long index = 0;
 
     @Override
     public User add(User user) {

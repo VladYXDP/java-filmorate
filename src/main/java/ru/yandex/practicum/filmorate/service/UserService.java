@@ -60,7 +60,7 @@ public class UserService {
                 throw new UserAlreadyExistException("Пользователи уже являются друзьями!");
             }
         } else {
-            throw new UserNotFoundException("Неверный формат параметра friendId " + friendId);
+            throw new UserNotFoundException(String.format("Неверный формат параметра friendId %d", friendId));
         }
     }
 
@@ -89,15 +89,16 @@ public class UserService {
         if (userStorage.getAllUser().containsKey(userId)) {
             return userStorage.getAllUser().get(userId);
         } else {
-            throw new UserNotFoundException("Пользователя с id " + userId + " не существует!");
+            throw new UserNotFoundException(String.format("Пользователя с id %d не существует!", userId));
         }
     }
 
     public List<User> getUserFriends(long userId) {
         List<User> friend = new ArrayList<>();
         getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(it)));
-        if (friend.isEmpty())
-            throw new UserNotFoundException("Список друзей у пользователя с id " + userId + " пуст!");
+        if (friend.isEmpty()) {
+            throw new UserNotFoundException(String.format("Список друзей у пользователя с id %d пуст!", userId));
+        }
         return friend;
     }
 
