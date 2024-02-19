@@ -3,13 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.film.FilmIsNullException;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,36 +46,28 @@ public class FilmService {
     }
 
     public void likeFilm(long userId, long filmId) {
-        if (filmStorage.getAllFilms().containsKey(filmId)) {
-            userService.getUserById(userId);
-            filmStorage.getAllFilms().get(filmId).addLike(userId);
-        } else {
-            throw new FilmNotFoundException(String.format("Фильм с id %d не найден!", filmId));
-        }
+        Film film = filmStorage.get(filmId);
+        userService.getUserById(userId);
+        film.addLike(userId);
+        filmStorage.update(film);
     }
 
     public void deleteLike(long userId, long filmId) {
-        if (filmStorage.getAllFilms().containsKey(filmId)) {
-            if (filmStorage.getAllFilms().get(filmId).getLikes().contains(userId) || userService.getUserById(userId) == null) {
-                filmStorage.getAllFilms().get(filmId).deleteLike(userId);
-            } else {
-                throw new UserNotFoundException(String.format("Не удалось удалить лайк пользователя с id %d", userId));
-            }
+        Film film = filmStorage.get(filmId);
+        if (film.getLikes().contains(userId) && userService.getUserById(userId) != null) {
+            film.deleteLike(userId);
+            filmStorage.update(film);
         } else {
-            throw new FilmNotFoundException(String.format("Ошибка удаления лайка! Фильм с id %d не найден!", filmId));
+            throw new UserNotFoundException(String.format("Не удалось удалить лайк пользователя с id %d", userId));
         }
     }
 
     public List<Film> getAllFilms() {
-        return new ArrayList<>(filmStorage.getAllFilms().values());
+        return filmStorage.getAllFilms();
     }
 
     public Film getFilmById(long id) {
-        if (filmStorage.getAllFilms().containsKey(id)) {
-            return filmStorage.getAllFilms().get(id);
-        } else {
-            throw new FilmNotFoundException(String.format("Фильм с id %d не найден!", id));
-        }
+        return filmStorage.get(id);
     }
 
     public List<Film> getPopularFilms(int count) {

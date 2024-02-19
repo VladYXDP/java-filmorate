@@ -5,7 +5,9 @@ import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -44,7 +46,15 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
-    public Map<Long, Film> getAllFilms() {
-        return films;
+    public Film get(long filmId) {
+        Film film = films.get(filmId);
+        if (film == null) {
+            throw new FilmNotFoundException(String.format("Фильм с id %d не найден!", filmId));
+        }
+        return film;
+    }
+
+    public List<Film> getAllFilms() {
+        return new ArrayList<>(films.values());
     }
 }
