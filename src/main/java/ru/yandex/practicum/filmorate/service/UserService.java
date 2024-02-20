@@ -86,11 +86,7 @@ public class UserService {
     }
 
     public User getUserById(long userId) {
-        if (userStorage.getAllUser().containsKey(userId)) {
-            return userStorage.getAllUser().get(userId);
-        } else {
-            throw new UserNotFoundException(String.format("Пользователя с id %d не существует!", userId));
-        }
+        return userStorage.get(userId);
     }
 
     public List<User> getUserFriends(long userId) {

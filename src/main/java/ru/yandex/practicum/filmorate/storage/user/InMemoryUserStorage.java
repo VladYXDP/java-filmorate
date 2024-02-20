@@ -44,6 +44,15 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public User get(long id) {
+        User user = users.get(id);
+        if (user == null) {
+            throw new UserNotFoundException(String.format("Пользователь с id %d не найден!", id));
+        }
+        return user;
+    }
+
+    @Override
     public Map<Long, User> getAllUser() {
         return users;
     }

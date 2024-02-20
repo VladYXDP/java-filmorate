@@ -12,5 +12,7 @@ public interface UserStorage {
 
     User update(User user);
 
+    User get(long id);
+
     Map<Long, User> getAllUser();
 }
