@@ -18,7 +18,7 @@ public class FilmDtoMapper {
 
     public FilmDto filmToDto(Film film) {
         if (film != null) {
-            FilmDto filmDto = new FilmDto(film.getReleaseDate(), film.getDuration());
+            FilmDto filmDto = new FilmDto();
             filmDto.setId(film.getId());
             filmDto.setName(film.getName());
             filmDto.setDescription(film.getDescription());

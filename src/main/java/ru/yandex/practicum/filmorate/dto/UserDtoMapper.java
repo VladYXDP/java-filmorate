@@ -18,10 +18,12 @@ public class UserDtoMapper {
 
     public UserDto userToDto(User user) {
         if (user != null) {
-            UserDto userDto = new UserDto(user.getEmail(), user.getBirthday());
+            UserDto userDto = new UserDto();
             userDto.setId(user.getId());
             userDto.setLogin(user.getLogin());
             userDto.setName(user.getName());
+            userDto.setBirthday(user.getBirthday());
+            userDto.setEmail(user.getEmail());
             return userDto;
         }
         return null;

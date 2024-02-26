@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.FilmDtoMapper;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -23,25 +22,29 @@ public class FilmController {
     private final FilmService filmService;
     private final FilmDtoMapper filmDtoTransfer;
 
-    @ExceptionHandler(ValidationException.class)
     @PostMapping
     public FilmDto addFilm(@Valid @RequestBody FilmDto filmDto) {
         Film film;
         if (filmDto != null && !filmDto.getDuration().isNegative()) {
             film = filmService.addFilm(filmDtoTransfer.dtoToFilm(filmDto));
-            log.info("Фильм " + film.getName() + "успешно добавлен!");
+            log.info(String.format("Фильм %s успешно добавлен!", film.getName()));
         } else {
             throw new ValidationException("Продолжительность фильма не должна быть меньше нуля!");
         }
         return filmDtoTransfer.filmToDto(film);
     }
 
-    @ExceptionHandler(FilmNotFoundException.class)
     @PutMapping
     public FilmDto updateFilm(@Valid @RequestBody FilmDto filmDto) {
         Film film = filmService.updateFilm(filmDtoTransfer.dtoToFilm(filmDto));
-        log.info("Фильм " + film.getName() + " успешно обновлён!");
+        log.info(String.format("Фильм %s успешно обновлён!", film.getName()));
         return filmDtoTransfer.filmToDto(film);
+    }
+
+    @GetMapping("/{id}")
+    public FilmDto getFilm(@PathVariable long id) {
+        log.info(String.format("Получить фильм с %d ", id));
+        return filmDtoTransfer.filmToDto(filmService.getFilmById(id));
     }
 
     @GetMapping
@@ -49,6 +52,26 @@ public class FilmController {
         log.info("Получен список всех фильмов!");
         return filmService.getAllFilms()
                 .stream()
+                .map(filmDtoTransfer::filmToDto)
+                .collect(Collectors.toList());
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public void likeFilm(@PathVariable long id, @PathVariable long userId) {
+        log.info(String.format("Пользователь с %d поставил лайк фильму с %d", userId, id));
+        filmService.likeFilm(userId, id);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteLike(@PathVariable long id, @PathVariable long userId) {
+        log.info(String.format("Пользователь с %d удаляет лайк с фильма с %d", userId, id));
+        filmService.deleteLike(userId, id);
+    }
+
+    @GetMapping("/popular")
+    public List<FilmDto> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+        log.info(String.format("Вывод %d популярных фильмов", count));
+        return filmService.getPopularFilms(count).stream()
                 .map(filmDtoTransfer::filmToDto)
                 .collect(Collectors.toList());
     }
