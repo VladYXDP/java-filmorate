@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
@@ -14,10 +16,11 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
-    private final UserStorage userStorage;
+    @Autowired
+    @Qualifier("inMemoryUserStorage")
+    private UserStorage userStorage;
 
     public User addUser(User user) {
         if (user != null) {
