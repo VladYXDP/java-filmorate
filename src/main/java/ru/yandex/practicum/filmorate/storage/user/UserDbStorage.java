@@ -1,16 +1,15 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,7 +33,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User delete(User user) {
-        String deleteQuery = "DELETE FROM USERS WHERE id = ?";
+        String deleteQuery = "DELETE FROM users WHERE id = ?";
         jdbcTemplate.update(deleteQuery, user.getId());
         return user;
     }
@@ -49,29 +48,24 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User get(long id) {
         String getQuery = "SELECT id, name, email, login, birthday FROM users WHERE id = ?";
-        SqlRowSet userRowSet = jdbcTemplate.queryForRowSet(getQuery);
-        return getRowMapperUser(userRowSet);
+        return (User) jdbcTemplate.query(getQuery, this::getRowMapperUser).get(0);
     }
 
     @Override
     public Map<Long, User> getAllUser() {
         String getAllQuery = "SELECT * FROM users";
-        jdbcTemplate.query(getAllQuery, (rs, rowNum) -> {});
     }
 
-    private User getRowMapperUser(SqlRowSet userRowSet) {
-        User user = new User();
-        if (userRowSet.next()) {
-            user.setId(userRowSet.getLong("id"));
-            user.setName(userRowSet.getString("name"));
-            user.setLogin(userRowSet.getString("login"));
-            user.setBirthday(LocalDate.parse(Objects.requireNonNull(userRowSet.getString("birthday"))));
+    private List<User> getRowMapperUser(ResultSet resultSet, int rowNum) throws SQLException {
+        List<User> users = new ArrayList<>();
+        while (resultSet.next()) {
+            User user = new User();
+            user.setId(resultSet.getLong("id"));
+            user.setName(resultSet.getString("name"));
+            user.setLogin(resultSet.getString("login"));
+            user.setBirthday(LocalDate.parse(Objects.requireNonNull(resultSet.getString("birthday"))));
+            users.add(user);
         }
-        return user;
-    }
-
-    private User getAllRowMapperUser(User user, ResultSet rs) {
-        User user = new User();
-
+        return users;
     }
 }
