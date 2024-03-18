@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.Set;
 public class UserService {
 
     @Autowired
-    @Qualifier("inMemoryUserStorage")
+    @Qualifier("userDbStorage")
     private UserStorage userStorage;
 
     public User addUser(User user) {
