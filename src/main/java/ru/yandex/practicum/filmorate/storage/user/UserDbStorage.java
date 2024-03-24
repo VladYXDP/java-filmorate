@@ -64,6 +64,16 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.queryForObject(getAllQuery, this::getRowMapperAllUser);
     }
 
+    private Boolean checkUser(User user) {
+        String existsUserQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE EMAIL = ? OR LOGIN = ?)";
+        return jdbcTemplate.queryForObject(existsUserQuery, Boolean.class, user.getEmail(), user.getLogin());
+    }
+
+    private Boolean checkUserById(long id) {
+        String existsUserByIdQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE id = ?)";
+        return jdbcTemplate.queryForObject(existsUserByIdQuery, Boolean.class, id);
+    }
+
     private User getRowMapperUser(ResultSet resultSet, int rowNum) throws SQLException {
         User user = null;
         if (resultSet.next()) {
