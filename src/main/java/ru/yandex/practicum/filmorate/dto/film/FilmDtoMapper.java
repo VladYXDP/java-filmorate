@@ -1,6 +1,7 @@
-package ru.yandex.practicum.filmorate.dto;
+package ru.yandex.practicum.filmorate.dto.film;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.model.Film;
 
 @Component

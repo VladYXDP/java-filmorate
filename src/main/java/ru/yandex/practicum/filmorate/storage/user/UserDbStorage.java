@@ -1,12 +1,10 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.RequiredArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.Date;
@@ -14,7 +12,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @Service("userDbStorage")
 @RequiredArgsConstructor
@@ -24,7 +24,6 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User add(User user) {
-        if (user != null) {
             String addQuery = "INSERT INTO users (email, name, birthday, login) VALUES (?,?,?,?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
@@ -35,10 +34,8 @@ public class UserDbStorage implements UserStorage {
                 stmt.setString(4, user.getLogin());
                 return stmt;
             }, keyHolder);
+            user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
             return user;
-        } else {
-            throw new UserIsNullException("Ошибка создания пользователя!");
-        }
     }
 
     @Override
@@ -74,6 +71,7 @@ public class UserDbStorage implements UserStorage {
             user.setId(resultSet.getLong("id"));
             user.setName(resultSet.getString("name"));
             user.setLogin(resultSet.getString("login"));
+            user.setEmail(resultSet.getString("email"));
             user.setBirthday(LocalDate.parse(Objects.requireNonNull(resultSet.getString("birthday"))));
         }
         return user;
@@ -86,6 +84,7 @@ public class UserDbStorage implements UserStorage {
             user.setId(resultSet.getLong("id"));
             user.setName(resultSet.getString("name"));
             user.setLogin(resultSet.getString("login"));
+            user.setEmail(resultSet.getString("email"));
             user.setBirthday(LocalDate.parse(Objects.requireNonNull(resultSet.getString("birthday"))));
             users.put(user.getId(), user);
         }
