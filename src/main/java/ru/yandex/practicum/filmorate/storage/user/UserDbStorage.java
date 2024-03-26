@@ -5,6 +5,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
+import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.Date;
@@ -24,6 +26,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User add(User user) {
+        if (!checkUser(user)) {
             String addQuery = "INSERT INTO users (email, name, birthday, login) VALUES (?,?,?,?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
@@ -36,20 +39,29 @@ public class UserDbStorage implements UserStorage {
             }, keyHolder);
             user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
             return user;
+        }
+        throw new UserAlreadyExistException("Пользователь с login " + user.getLogin() + " или email "
+                + user.getEmail() + " уже существует!");
     }
 
     @Override
     public User delete(User user) {
-        String deleteQuery = "DELETE FROM users WHERE id = ?";
-        jdbcTemplate.update(deleteQuery, user.getId());
-        return user;
+        if (checkUserById(user.getId())) {
+            String deleteQuery = "DELETE FROM users WHERE id = ?";
+            jdbcTemplate.update(deleteQuery, user.getId());
+            return user;
+        }
+        throw new UserNotFoundException("Ошибка удаления пользователя с id " + user.getId());
     }
 
     @Override
     public User update(User user) {
-        String updateQuery = "UPDATE users SET email = ?, name = ?, login = ?, birthday = ?";
-        jdbcTemplate.update(updateQuery, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday());
-        return user;
+        if (checkUserById(user.getId())) {
+            String updateQuery = "UPDATE users SET email = ?, name = ?, login = ?, birthday = ?";
+            jdbcTemplate.update(updateQuery, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday());
+            return user;
+        }
+        throw new UserNotFoundException("Ошибка удаления пользователя с id " + user.getId());
     }
 
     @Override
@@ -64,14 +76,14 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.queryForObject(getAllQuery, this::getRowMapperAllUser);
     }
 
-    private Boolean checkUser(User user) {
-        String existsUserQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE EMAIL = ? OR LOGIN = ?)";
-        return jdbcTemplate.queryForObject(existsUserQuery, Boolean.class, user.getEmail(), user.getLogin());
-    }
-
     private Boolean checkUserById(long id) {
         String existsUserByIdQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE id = ?)";
         return jdbcTemplate.queryForObject(existsUserByIdQuery, Boolean.class, id);
+    }
+
+    private Boolean checkUser(User user) {
+        String existsUserQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE EMAIL = ? OR LOGIN = ?)";
+        return jdbcTemplate.queryForObject(existsUserQuery, Boolean.class, user.getEmail(), user.getLogin());
     }
 
     private User getRowMapperUser(ResultSet resultSet, int rowNum) throws SQLException {
