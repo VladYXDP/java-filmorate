@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -14,8 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 
 @Service("userDbStorage")
@@ -61,19 +61,33 @@ public class UserDbStorage implements UserStorage {
             jdbcTemplate.update(updateQuery, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday());
             return user;
         }
-        throw new UserNotFoundException("Ошибка удаления пользователя с id " + user.getId());
+        throw new UserNotFoundException("Ошибка обновления пользователя с id " + user.getId());
     }
 
     @Override
     public User get(long id) {
-        String getQuery = "SELECT id, name, email, login, birthday FROM users WHERE id = ?";
-        return jdbcTemplate.queryForObject(getQuery, this::getRowMapperUser);
+        String getQuery = "SELECT u.id, u.name, u.email, u.login, u.birthday, f.friend_id " +
+                "FROM users INNER JOIN friends ON user_id = ?";
+        return jdbcTemplate.queryForObject(getQuery, this::getRowMapperUser, id);
     }
 
     @Override
-    public Map<Long, User> getAllUser() {
+    public List<User> getAllUser() {
         String getAllQuery = "SELECT * FROM users";
-        return jdbcTemplate.queryForObject(getAllQuery, this::getRowMapperAllUser);
+        return jdbcTemplate.query(getAllQuery, this::getRowMapperUser);
+    }
+
+    public void addFriend(long userId, long friendId) {
+        if (checkFriends(userId, friendId)) {
+            String insertAddFriendQuery = "INSERT INTO friends (user_id, friend_id, status) VALUES (?,?,?)";
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stmt = connection.prepareStatement(insertAddFriendQuery);
+                stmt.setLong(1, userId);
+                stmt.setLong(2, friendId);
+                stmt.setBoolean(3, true);
+                return stmt;
+            });
+        }
     }
 
     private Boolean checkUserById(long id) {
@@ -86,30 +100,32 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.queryForObject(existsUserQuery, Boolean.class, user.getEmail(), user.getLogin());
     }
 
-    private User getRowMapperUser(ResultSet resultSet, int rowNum) throws SQLException {
-        User user = null;
-        if (resultSet.next()) {
-            user = new User();
-            user.setId(resultSet.getLong("id"));
-            user.setName(resultSet.getString("name"));
-            user.setLogin(resultSet.getString("login"));
-            user.setEmail(resultSet.getString("email"));
-            user.setBirthday(LocalDate.parse(Objects.requireNonNull(resultSet.getString("birthday"))));
+    private Boolean checkFriends(long userId, long friendId) {
+        if (checkUserById(userId) && checkUserById(friendId)) {
+            String getUserStatusQuery = "SELECT * from FRIENDS WHERE user_id = ?";
+            try {
+                Boolean userStatus = jdbcTemplate.queryForObject(getUserStatusQuery, Boolean.class, userId);
+                if (Boolean.FALSE.equals(userStatus)) {
+                    return false;
+                } else {
+                    throw new RuntimeException("Заявка на добавления в друзья пользователя с id "
+                            + friendId + " уже существует!");
+                }
+            } catch (EmptyResultDataAccessException e) {
+                return true;
+            }
         }
-        return user;
+        throw new RuntimeException("Ошибка добавления в друзья! Пользователя с id " + userId
+                + " или с id " + friendId + " не существует!");
     }
 
-    private Map<Long, User> getRowMapperAllUser(ResultSet resultSet, int rowNum) throws SQLException {
-        Map<Long, User> users = new HashMap<>();
-        while (resultSet.next()) {
-            User user = new User();
-            user.setId(resultSet.getLong("id"));
-            user.setName(resultSet.getString("name"));
-            user.setLogin(resultSet.getString("login"));
-            user.setEmail(resultSet.getString("email"));
-            user.setBirthday(LocalDate.parse(Objects.requireNonNull(resultSet.getString("birthday"))));
-            users.put(user.getId(), user);
-        }
-        return users;
+    private User getRowMapperUser(ResultSet resultSet, int rowNum) throws SQLException {
+        User user = new User();
+        user.setId(resultSet.getLong("id"));
+        user.setName(resultSet.getString("name"));
+        user.setLogin(resultSet.getString("login"));
+        user.setEmail(resultSet.getString("email"));
+        user.setBirthday(LocalDate.parse(Objects.requireNonNull(resultSet.getString("birthday"))));
+        return user;
     }
 }

@@ -105,6 +105,6 @@ public class UserService {
     }
 
     public List<User> getAllUsers() {
-        return new ArrayList<>(userStorage.getAllUser().values());
+        return userStorage.getAllUser();
     }
 }
