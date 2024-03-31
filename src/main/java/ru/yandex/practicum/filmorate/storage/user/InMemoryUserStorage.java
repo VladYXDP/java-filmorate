@@ -60,6 +60,11 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public void removeFriend(long userId, long friendId) {
+
+    }
+
+    @Override
     public List<User> getAllUser() {
         return new ArrayList<>(users.values());
     }

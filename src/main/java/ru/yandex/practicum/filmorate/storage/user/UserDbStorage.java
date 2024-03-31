@@ -28,39 +28,46 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User add(User user) {
-        checkUser(user);
-        String addQuery = "INSERT INTO users (email, name, birthday, login) VALUES (?,?,?,?)";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(addQuery, new String[]{"id"});
-            stmt.setString(1, user.getEmail());
-            stmt.setString(2, user.getName());
-            stmt.setDate(3, Date.valueOf(user.getBirthday()));
-            stmt.setString(4, user.getLogin());
-            return stmt;
-        }, keyHolder);
-        user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
-        return user;
+        if (!checkUser(user)) {
+            String addQuery = "INSERT INTO users (email, name, birthday, login) VALUES (?,?,?,?)";
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stmt = connection.prepareStatement(addQuery, new String[]{"id"});
+                stmt.setString(1, user.getEmail());
+                stmt.setString(2, user.getName());
+                stmt.setDate(3, Date.valueOf(user.getBirthday()));
+                stmt.setString(4, user.getLogin());
+                return stmt;
+            }, keyHolder);
+            user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+            return user;
+        }
+        throw new UserAlreadyExistException("Пользователь с email " + user.getEmail() + " и login " + user.getLogin() +
+                " уже существует");
     }
 
     @Override
     public User delete(User user) {
-        checkUserById(user.getId());
-        String deleteQuery = "DELETE FROM users WHERE id = ?";
-        String deleteFriends = "DELETE FROM friends WHERE user_id = ?";
-        String deleteFromFriends = "DELETE FROM friends WHERE friend_id = ?";
-        jdbcTemplate.update(deleteQuery, user.getId());
-        jdbcTemplate.update(deleteFriends, user.getId());
-        jdbcTemplate.update(deleteFromFriends, user.getId());
-        return user;
+        if (checkUserById(user.getId())) {
+            String deleteQuery = "DELETE FROM users WHERE id = ?";
+            String deleteFriends = "DELETE FROM friends WHERE user_id = ?";
+            String deleteFromFriends = "DELETE FROM friends WHERE friend_id = ?";
+            jdbcTemplate.update(deleteQuery, user.getId());
+            jdbcTemplate.update(deleteFriends, user.getId());
+            jdbcTemplate.update(deleteFromFriends, user.getId());
+            return user;
+        }
+        throw new UserNotFoundException("Ошибка удаления пользователя!");
     }
 
     @Override
     public User update(User user) {
-        checkUserById(user.getId());
-        String updateQuery = "UPDATE users SET email = ?, name = ?, login = ?, birthday = ?";
-        jdbcTemplate.update(updateQuery, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday());
-        return user;
+        if (checkUserById(user.getId())) {
+            String updateQuery = "UPDATE users SET email = ?, name = ?, login = ?, birthday = ?";
+            jdbcTemplate.update(updateQuery, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday());
+            return user;
+        }
+        throw new UserNotFoundException("Ошибка обновления пользователя!");
     }
 
 
@@ -122,21 +129,14 @@ public class UserDbStorage implements UserStorage {
         jdbcTemplate.update(updateFriends, friendId, userId);
     }
 
-    private void checkUserById(long id) {
+    private boolean checkUserById(long id) {
         String existsUserByIdQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE id = ?)";
-        boolean userExist = jdbcTemplate.queryForObject(existsUserByIdQuery, Boolean.class, id);
-        if (!userExist) {
-            throw new RuntimeException("Ошибка добавления в друзья! Пользователя с id " + id + " не существует!");
-        }
+        return jdbcTemplate.queryForObject(existsUserByIdQuery, Boolean.class, id);
     }
 
-    private void checkUser(User user) {
+    private boolean checkUser(User user) {
         String existsUserQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE EMAIL = ? OR LOGIN = ?)";
-        boolean userExist = jdbcTemplate.queryForObject(existsUserQuery, Boolean.class, user.getEmail(), user.getLogin());
-        if (!userExist) {
-            throw new UserAlreadyExistException("Пользователь с login " + user.getLogin() + " или email "
-                    + user.getEmail() + " уже существует!");
-        }
+        return jdbcTemplate.queryForObject(existsUserQuery, Boolean.class, user.getEmail(), user.getLogin());
     }
 
     private User getRowMapperUser(ResultSet resultSet, int rowNum) throws SQLException {
@@ -150,10 +150,13 @@ public class UserDbStorage implements UserStorage {
     }
 
     private Friends getRowMapperFriends(ResultSet resultSet, int rowNum) throws SQLException {
-        Friends friends = new Friends();
-        friends.setFriendId(resultSet.getLong("friend_id"));
-        friends.setUserId(resultSet.getLong("user_id"));
-        friends.setStatus(resultSet.getBoolean("status"));
+        Friends friends = null;
+        if (resultSet.next()) {
+            friends = new Friends();
+            friends.setFriendId(resultSet.getLong("friend_id"));
+            friends.setUserId(resultSet.getLong("user_id"));
+            friends.setStatus(resultSet.getBoolean("status"));
+        }
         return friends;
     }
 }
