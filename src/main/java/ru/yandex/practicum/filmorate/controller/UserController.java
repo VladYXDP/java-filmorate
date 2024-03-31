@@ -52,7 +52,7 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addToFriend(@PathVariable long id, @PathVariable long friendId) {
-        userService.becomeToFriend(id, friendId);
+        userService.addFriend(id, friendId);
         log.info(String.format("Пользователь с id %d стал другом пользователя с id %d", id, friendId));
     }
 

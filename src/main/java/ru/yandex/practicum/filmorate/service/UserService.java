@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -53,29 +52,37 @@ public class UserService {
         }
     }
 
-    public void becomeToFriend(long userId, long friendId) {
-        if (friendId > 0) {
-            if (isNotFriends(userId, friendId)) {
-                getUserById(userId).getFriends().add(friendId);
-                getUserById(friendId).getFriends().add(userId);
-            } else {
-                throw new UserAlreadyExistException("Пользователи уже являются друзьями!");
-            }
-        } else {
-            throw new UserNotFoundException(String.format("Неверный формат параметра friendId %d", friendId));
-        }
+    public void addFriend(long userId, long friendId) {
+        userStorage.addFriend(userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        if (isNotFriends(userId, friendId)) {
-            throw new UserNotFoundException(("Ошибка удаления из друзей! Пользователи не были друзьями!"));
-        } else {
-            user.getFriends().remove(friend.getId());
-            friend.getFriends().remove(user.getId());
-        }
+        userStorage.removeFriend(userId, friendId);
     }
+
+//    public void becomeToFriend(long userId, long friendId) {
+//        if (friendId > 0) {
+//            if (isNotFriends(userId, friendId)) {
+//                getUserById(userId).getFriends().add(friendId);
+//                getUserById(friendId).getFriends().add(userId);
+//            } else {
+//                throw new UserAlreadyExistException("Пользователи уже являются друзьями!");
+//            }
+//        } else {
+//            throw new UserNotFoundException(String.format("Неверный формат параметра friendId %d", friendId));
+//        }
+//    }
+
+//    public void removeFriend(long userId, long friendId) {
+//        User user = getUserById(userId);
+//        User friend = getUserById(friendId);
+//        if (isNotFriends(userId, friendId)) {
+//            throw new UserNotFoundException(("Ошибка удаления из друзей! Пользователи не были друзьями!"));
+//        } else {
+//            user.getFriends().remove(friend.getId());
+//            friend.getFriends().remove(user.getId());
+//        }
+//    }
 
     public List<User> getCommonsFriend(long id, long otherId) {
         List<User> users = new ArrayList<>();
