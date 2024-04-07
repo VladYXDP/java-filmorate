@@ -60,30 +60,6 @@ public class UserService {
         userStorage.removeFriend(userId, friendId);
     }
 
-//    public void becomeToFriend(long userId, long friendId) {
-//        if (friendId > 0) {
-//            if (isNotFriends(userId, friendId)) {
-//                getUserById(userId).getFriends().add(friendId);
-//                getUserById(friendId).getFriends().add(userId);
-//            } else {
-//                throw new UserAlreadyExistException("Пользователи уже являются друзьями!");
-//            }
-//        } else {
-//            throw new UserNotFoundException(String.format("Неверный формат параметра friendId %d", friendId));
-//        }
-//    }
-
-//    public void removeFriend(long userId, long friendId) {
-//        User user = getUserById(userId);
-//        User friend = getUserById(friendId);
-//        if (isNotFriends(userId, friendId)) {
-//            throw new UserNotFoundException(("Ошибка удаления из друзей! Пользователи не были друзьями!"));
-//        } else {
-//            user.getFriends().remove(friend.getId());
-//            friend.getFriends().remove(user.getId());
-//        }
-//    }
-
     public List<User> getCommonsFriend(long id, long otherId) {
         List<User> users = new ArrayList<>();
         Set<Long> userFriends = new HashSet<>(getUserById(id).getFriends());
@@ -101,14 +77,10 @@ public class UserService {
     public List<User> getUserFriends(long userId) {
         List<User> friend = new ArrayList<>();
         getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(it)));
-        if (friend.isEmpty()) {
-            throw new UserNotFoundException(String.format("Список друзей у пользователя с id %d пуст!", userId));
-        }
+//        if (friend.isEmpty()) {
+//            throw new UserNotFoundException(String.format("Список друзей у пользователя с id %d пуст!", userId));
+//        }
         return friend;
-    }
-
-    private boolean isNotFriends(long user, long friend) {
-        return !getUserById(user).getFriends().contains(friend);
     }
 
     public List<User> getAllUsers() {
