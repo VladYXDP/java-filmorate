@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
-import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -77,9 +76,6 @@ public class UserService {
     public List<User> getUserFriends(long userId) {
         List<User> friend = new ArrayList<>();
         getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(it)));
-//        if (friend.isEmpty()) {
-//            throw new UserNotFoundException(String.format("Список друзей у пользователя с id %d пуст!", userId));
-//        }
         return friend;
     }
 
