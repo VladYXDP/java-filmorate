@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/ratings")
+@RequestMapping("/mpa")
 @RequiredArgsConstructor
 @Slf4j
 public class RatingController {
@@ -26,7 +26,7 @@ public class RatingController {
     @GetMapping(path = "/{id}")
     public RatingDto getRating(@PathVariable("id") long id) {
         log.info("Запрос на получение рейтинга по id = " + id);
-        return ratingDtoMapper.genreToDto(ratingService.getRating(id));
+        return ratingDtoMapper.ratingToDto(ratingService.getRating(id));
     }
 
     @GetMapping
@@ -34,7 +34,7 @@ public class RatingController {
         log.info("Запрос на получение списка рейтингов!");
         return ratingService.getAllRating()
                 .stream()
-                .map(ratingDtoMapper::genreToDto)
+                .map(ratingDtoMapper::ratingToDto)
                 .collect(Collectors.toList());
     }
 }
