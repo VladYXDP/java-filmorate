@@ -38,7 +38,7 @@ public class RatingStorage {
     private Rating getRatingMapper(ResultSet resultSet, int rowNum) throws SQLException {
         return new Rating(
                 resultSet.getLong("id"),
-                resultSet.getString("rating")
+                resultSet.getString("name")
         );
     }
 }

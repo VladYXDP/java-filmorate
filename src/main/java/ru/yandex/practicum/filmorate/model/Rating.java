@@ -8,5 +8,5 @@ import lombok.Data;
 public class Rating {
 
     private long id;
-    private String rating;
+    private String name;
 }

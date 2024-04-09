@@ -8,7 +8,7 @@ public class RatingDtoMapper {
 
     public RatingDto ratingToDto(Rating rating) {
         if (rating != null) {
-            return new RatingDto(rating.getId(), rating.getRating());
+            return new RatingDto(rating.getId(), rating.getName());
         }
         return null;
     }
