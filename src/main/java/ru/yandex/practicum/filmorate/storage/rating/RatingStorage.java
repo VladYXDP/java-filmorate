@@ -30,7 +30,7 @@ public class RatingStorage {
         return jdbcTemplate.query(genresQuery, this::getRatingMapper);
     }
 
-    private boolean checkRating(long id) {
+    public boolean checkRating(long id) {
         String checkQuery = "SELECT EXISTS (SELECT 1 FROM RATINGS WHERE id = ?)";
         return jdbcTemplate.queryForObject(checkQuery, Boolean.class, id);
     }
