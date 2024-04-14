@@ -19,7 +19,8 @@ public class Film {
     private Duration duration;
     private Set<Long> likes = new HashSet<>();
     private Long likesCount = 0L;
-    private Rating rating;
+    private Long ratingId;
+    private Rating mpa;
     private List<Genre> genres = new ArrayList<>();
 
     public void addLike(long userId) {

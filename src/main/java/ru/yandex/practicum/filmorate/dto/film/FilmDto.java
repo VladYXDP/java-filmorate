@@ -32,6 +32,6 @@ public class FilmDto {
     @JsonSerialize(using = DurationSerializeFormatter.class)
     @JsonDeserialize(using = DurationDeserializeFormatter.class)
     private Duration duration;
-    private RatingDto rating;
+    private RatingDto mpa;
     private List<GenreDto> genres = new ArrayList<>();
 }

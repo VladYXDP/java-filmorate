@@ -17,10 +17,11 @@ public class GenreDtoMapper {
         return new Genre(dto.getId(), dto.getName());
     }
 
+    public List<GenreDto> genreToDto(List<Genre> genres) {
+        return genres.stream().map(this::genreToDto).collect(Collectors.toList());
+    }
+
     public GenreDto genreToDto(Genre genre) {
-        if (genre != null) {
-            return new GenreDto(genre.getId(), genre.getName());
-        }
-        return null;
+        return new GenreDto(genre.getId(), genre.getName());
     }
 }

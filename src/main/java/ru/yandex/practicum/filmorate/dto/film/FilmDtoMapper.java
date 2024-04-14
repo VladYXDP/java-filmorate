@@ -20,8 +20,8 @@ public class FilmDtoMapper {
         film.setDescription(dto.getDescription());
         film.setDuration(dto.getDuration());
         film.setReleaseDate(dto.getReleaseDate());
-        if (dto.getRating() != null) {
-            film.setRating(ratingDtoMapper.dtoToRating(dto.getRating()));
+        if (dto.getMpa() != null) {
+            film.setMpa(ratingDtoMapper.dtoToRating(dto.getMpa()));
         }
         if (!dto.getGenres().isEmpty()) {
             film.setGenres(genreDtoMapper.dtoToGenre(dto.getGenres()));
@@ -37,6 +37,12 @@ public class FilmDtoMapper {
             dto.setDescription(film.getDescription());
             dto.setDuration(film.getDuration());
             dto.setReleaseDate(film.getReleaseDate());
+            if(film.getMpa() != null) {
+                dto.setMpa(ratingDtoMapper.ratingToDto(film.getMpa()));
+            }
+            if (!film.getGenres().isEmpty()) {
+                dto.setGenres(genreDtoMapper.genreToDto(film.getGenres()));
+            }
             return dto;
         }
         return null;

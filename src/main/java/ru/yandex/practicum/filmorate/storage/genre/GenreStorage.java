@@ -40,6 +40,16 @@ public class GenreStorage {
         return jdbcTemplate.queryForObject(checkQuery, Boolean.class, id);
     }
 
+    public boolean checkGenre(List<Genre> genres) {
+        return genres.stream().map(Genre::getId).anyMatch(this::checkGenre);
+    }
+
+    public List<Genre> getGenresByFilmId(long filmId) {
+        String getGenresQuery = "SELECT g.id, g.name FROM FILMS_GENRES AS fg INNER JOIN GENRES AS g ON GENRES.id = fg.genres_id " +
+                "WHERE fg.films_id = ?";
+        return jdbcTemplate.query(getGenresQuery, this::getGenreMapper);
+    }
+
     private Genre getGenreMapper(ResultSet resultSet, int rowNum) throws SQLException {
         return new Genre(
                 resultSet.getLong("id"),
