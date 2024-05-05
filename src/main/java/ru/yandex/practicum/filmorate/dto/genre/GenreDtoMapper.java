@@ -4,21 +4,22 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public class GenreDtoMapper {
 
-    public List<Genre> dtoToGenre(List<GenreDto> dto) {
-        return dto.stream().map(this::dtoToGenre).collect(Collectors.toList());
+    public Set<Genre> dtoToGenre(Set<GenreDto> dto) {
+        return dto.stream().map(this::dtoToGenre).collect(Collectors.toSet());
     }
 
     public Genre dtoToGenre(GenreDto dto) {
         return new Genre(dto.getId(), dto.getName());
     }
 
-    public List<GenreDto> genreToDto(List<Genre> genres) {
-        return genres.stream().map(this::genreToDto).collect(Collectors.toList());
+    public Set<GenreDto> genreToDto(Set<Genre> genres) {
+        return genres.stream().map(this::genreToDto).collect(Collectors.toSet());
     }
 
     public GenreDto genreToDto(Genre genre) {

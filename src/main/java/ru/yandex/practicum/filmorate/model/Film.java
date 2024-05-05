@@ -21,7 +21,7 @@ public class Film {
     private Long likesCount = 0L;
     private Long ratingId;
     private Rating mpa;
-    private List<Genre> genres = new ArrayList<>();
+    private Set<Genre> genres = new HashSet<>();
 
     public void addLike(long userId) {
         likes.add(userId);

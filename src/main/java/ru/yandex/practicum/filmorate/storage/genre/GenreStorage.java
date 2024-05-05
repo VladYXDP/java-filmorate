@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -40,7 +41,7 @@ public class GenreStorage {
         return jdbcTemplate.queryForObject(checkQuery, Boolean.class, id);
     }
 
-    public boolean checkGenre(List<Genre> genres) {
+    public boolean checkGenre(Set<Genre> genres) {
         return genres.stream().map(Genre::getId).anyMatch(this::checkGenre);
     }
 

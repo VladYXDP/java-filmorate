@@ -7,6 +7,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.film.FilmAlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.rating.RatingNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
@@ -18,8 +19,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Component(value = "filmDbStorage")
 @RequiredArgsConstructor
@@ -47,6 +50,7 @@ public class FilmDbStorage implements FilmStorage {
                         return stmt;
                     }, keyHolder);
                 }
+                throw new RatingNotFoundException("Рейтинг фильма с id " + film.getMpa().getId() + " не найден!");
             } else {
                 addQuery = "INSERT INTO FILMS (name, description, release_date, duration) VALUES (?,?,?,?)";
                 jdbcTemplate.update(connection -> {
@@ -108,7 +112,7 @@ public class FilmDbStorage implements FilmStorage {
             String getQuery = "SELECT * FROM films WHERE id = ?";
             Film film = jdbcTemplate.queryForObject(getQuery, this::getRowMapperFilm);
             Rating rating = ratingStorage.getRatingById(film.getRatingId());
-            List<Genre> genres = genreStorage.getGenresByFilmId(filmId);
+            Set<Genre> genres = new HashSet<>(genreStorage.getGenresByFilmId(filmId));
             film.setMpa(rating);
             film.setGenres(genres);
             return film;
@@ -120,7 +124,16 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getAllFilms() {
         String getAllQuery = "SELECT * FROM films";
-        return jdbcTemplate.query(getAllQuery, this::getRowMapperFilm);
+        List<Film> films = jdbcTemplate.query(getAllQuery, this::getRowMapperFilm);
+        films.forEach(it -> {
+            Rating rating = ratingStorage.getRatingById(it.getRatingId());
+            it.setMpa(rating);
+        });
+        films.forEach(it -> {
+            Set<Genre> genres = new HashSet<>(genreStorage.getGenresByFilmId(it.getId()));
+            it.setGenres(genres);
+        });
+        return films;
     }
 
     private boolean checkFilm(Film film) {
