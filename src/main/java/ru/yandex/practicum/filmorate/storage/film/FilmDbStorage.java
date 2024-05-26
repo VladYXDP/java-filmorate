@@ -49,8 +49,9 @@ public class FilmDbStorage implements FilmStorage {
                         stmt.setLong(5, film.getMpa().getId());
                         return stmt;
                     }, keyHolder);
+                } else {
+                    throw new RatingNotFoundException("Рейтинг фильма с id " + film.getMpa().getId() + " не найден!");
                 }
-                throw new RatingNotFoundException("Рейтинг фильма с id " + film.getMpa().getId() + " не найден!");
             } else {
                 addQuery = "INSERT INTO FILMS (name, description, release_date, duration) VALUES (?,?,?,?)";
                 jdbcTemplate.update(connection -> {
@@ -153,6 +154,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private Film getRowMapperFilm(ResultSet resultSet, int rowNum) throws SQLException {
         Film film = new Film();
+        film.setId(resultSet.getLong("id"));
         film.setName(resultSet.getString("name"));
         film.setDescription(resultSet.getString("description"));
         film.setReleaseDate(resultSet.getDate("release_date").toLocalDate());
