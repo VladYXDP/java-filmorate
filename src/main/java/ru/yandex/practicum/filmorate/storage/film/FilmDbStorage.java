@@ -111,7 +111,7 @@ public class FilmDbStorage implements FilmStorage {
     public Film get(long filmId) {
         if (checkFilm(filmId)) {
             String getQuery = "SELECT * FROM films WHERE id = ?";
-            Film film = jdbcTemplate.queryForObject(getQuery, this::getRowMapperFilm);
+            Film film = jdbcTemplate.queryForObject(getQuery, this::getRowMapperFilm, filmId);
             Rating rating = ratingStorage.getRatingById(film.getRatingId());
             Set<Genre> genres = new HashSet<>(genreStorage.getGenresByFilmId(filmId));
             film.setMpa(rating);

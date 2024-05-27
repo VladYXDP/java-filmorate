@@ -46,10 +46,12 @@ public class GenreStorage {
     }
 
     public List<Genre> getGenresByFilmId(long filmId) {
-        String getGenresQuery = "SELECT g.id, g.name FROM FILMS_GENRES AS fg INNER JOIN GENRES AS g ON g.id = fg.genres_id " +
-                "WHERE fg.films_id = ?";
-        List<Genre> genres = jdbcTemplate.query(getGenresQuery, this::getGenreMapper, filmId);
-        return genres;
+        String getGenresQuery = "SELECT g.id, g.name" +
+                "    FROM FILMS_GENRES AS fg" +
+                "        INNER JOIN GENRES AS g ON g.id = fg.genres_id" +
+                "    WHERE fg.films_id = ?" +
+                "    ORDER BY g.id ASC";
+        return jdbcTemplate.query(getGenresQuery, this::getGenreMapper, filmId);
     }
 
     private Genre getGenreMapper(ResultSet resultSet, int rowNum) throws SQLException {
