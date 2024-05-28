@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -13,6 +15,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -31,6 +34,9 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final GenreStorage genreStorage;
     private final RatingStorage ratingStorage;
+    @Autowired
+    @Qualifier("userDbStorage")
+    private UserStorage userStorage;
 
     @Override
     public Film add(Film film) {
@@ -118,6 +124,7 @@ public class FilmDbStorage implements FilmStorage {
             Film film = jdbcTemplate.queryForObject(getQuery, this::getRowMapperFilm, filmId);
             Rating rating = ratingStorage.getRatingById(film.getRatingId());
             Set<Genre> genres = new HashSet<>(genreStorage.getGenresByFilmId(filmId));
+            film.setLikesCount(getLikes(filmId));
             film.setMpa(rating);
             film.setGenres(genres);
             return film;
@@ -141,6 +148,34 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
+    @Override
+    public void addLike(long userId, long filmId) {
+        if (!checkLike(userId, filmId)) {
+            userStorage.get(userId);
+            get(filmId);
+            String addLikeQuery = "INSERT INTO likes (user_id, film_id) VALUES(?,?)";
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stmt = connection.prepareStatement(addLikeQuery, new String[]{"id"});
+                stmt.setLong(1, userId);
+                stmt.setLong(2, filmId);
+                return stmt;
+            });
+        }
+    }
+
+    @Override
+    public void deleteLike(long userId, long filmId) {
+        if (checkLike(userId, filmId)) {
+            String deleteLikeQuery = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
+            jdbcTemplate.update(deleteLikeQuery, userId, filmId);
+        }
+    }
+
+    private long getLikes(long filmId) {
+        String likesCount = "SELECT count(*) FROM likes WHERE film_id = ?";
+        return jdbcTemplate.queryForObject(likesCount, Long.class, filmId);
+    }
+
     private boolean checkFilm(Film film) {
         String checkQuery = "SELECT EXISTS(SELECT 1 FROM FILMS WHERE name = ?)";
         return jdbcTemplate.queryForObject(checkQuery, Boolean.class, film.getName());
@@ -149,6 +184,11 @@ public class FilmDbStorage implements FilmStorage {
     private boolean checkFilm(long id) {
         String checkQuery = "SELECT EXISTS(SELECT 1 FROM FILMS WHERE id = ?)";
         return jdbcTemplate.queryForObject(checkQuery, Boolean.class, id);
+    }
+
+    private boolean checkLike(long userId, long filmId) {
+        String checkLikeQuery = "SELECT EXISTS(SELECT 1 FROM LIKES WHERE user_id = ? AND film_id = ?)";
+        return jdbcTemplate.queryForObject(checkLikeQuery, Boolean.class, userId, filmId);
     }
 
     private boolean checkFilmGenre(long filmId, long genreId) {

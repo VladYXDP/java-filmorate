@@ -59,7 +59,7 @@ public class FilmController {
     @PutMapping("/{id}/like/{userId}")
     public void likeFilm(@PathVariable long id, @PathVariable long userId) {
         log.info(String.format("Пользователь с %d поставил лайк фильму с %d", userId, id));
-        filmService.likeFilm(userId, id);
+        filmService.addLike(userId, id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
