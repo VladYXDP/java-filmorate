@@ -33,7 +33,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleRatingNotFoundException(final RatingNotFoundException e) {
         return Map.of("error", e.getMessage());
     }

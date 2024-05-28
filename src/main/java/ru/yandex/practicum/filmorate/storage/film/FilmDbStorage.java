@@ -49,6 +49,8 @@ public class FilmDbStorage implements FilmStorage {
                         stmt.setLong(5, film.getMpa().getId());
                         return stmt;
                     }, keyHolder);
+                    Rating mpa = ratingStorage.getRatingById(film.getMpa().getId());
+                    film.setMpa(mpa);
                 } else {
                     throw new RatingNotFoundException("Рейтинг фильма с id " + film.getMpa().getId() + " не найден!");
                 }
@@ -76,6 +78,8 @@ public class FilmDbStorage implements FilmStorage {
                         });
                     }
                 });
+                List<Genre> genres = genreStorage.getGenresByFilmId(film.getId());
+                film.setGenres(new HashSet<>(genres));
             }
             return film;
         } else {
