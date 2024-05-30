@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.controller.RatingController;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.exception.film.FilmAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.exception.rating.RatingNotFoundException;
@@ -33,7 +34,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleRatingNotFoundException(final RatingNotFoundException e) {
         return Map.of("error", e.getMessage());
     }
@@ -53,6 +54,12 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleFilmAlreadyExistException(final FilmAlreadyExistsException e) {
+        return Map.of("error", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleFilmCreateException(final FilmCreateException e) {
         return Map.of("error", e.getMessage());
     }
 

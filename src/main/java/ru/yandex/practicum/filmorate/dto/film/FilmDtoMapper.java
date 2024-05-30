@@ -43,6 +43,9 @@ public class FilmDtoMapper {
             if (!film.getGenres().isEmpty()) {
                 dto.setGenres(genreDtoMapper.genreToDto(film.getGenres()));
             }
+            if (film.getLikesCount() != null) {
+                dto.setLikeCount(film.getLikesCount());
+            }
             return dto;
         }
         return null;

@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.validate.annotation.ReleaseValidation;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -34,6 +35,8 @@ public class FilmDto {
     @JsonSerialize(using = DurationSerializeFormatter.class)
     @JsonDeserialize(using = DurationDeserializeFormatter.class)
     private Duration duration;
+    @PositiveOrZero
+    private Long likeCount;
     private RatingDto mpa;
-    private Set<GenreDto> genres = new HashSet<>();
+    private List<GenreDto> genres = new ArrayList<>();
 }

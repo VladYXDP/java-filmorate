@@ -8,7 +8,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.film.FilmAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.exception.rating.RatingNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -22,10 +24,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @Component(value = "filmDbStorage")
 @RequiredArgsConstructor
@@ -58,7 +58,7 @@ public class FilmDbStorage implements FilmStorage {
                     Rating mpa = ratingStorage.getRatingById(film.getMpa().getId());
                     film.setMpa(mpa);
                 } else {
-                    throw new RatingNotFoundException("Рейтинг фильма с id " + film.getMpa().getId() + " не найден!");
+                    throw new FilmCreateException("Рейтинг фильма с id " + film.getMpa().getId() + " не найден!");
                 }
             } else {
                 addQuery = "INSERT INTO FILMS (name, description, release_date, duration) VALUES (?,?,?,?)";
@@ -72,20 +72,24 @@ public class FilmDbStorage implements FilmStorage {
                 }, keyHolder);
             }
             film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
-            if (!film.getGenres().isEmpty() && genreStorage.checkGenre(film.getGenres())) {
-                String queryFilmsGenres = "INSERT INTO films_genres (films_id, genres_id) VALUES (?,?)";
-                film.getGenres().forEach(it -> {
-                    if (!checkFilmGenre(film.getId(), it.getId())) {
-                        jdbcTemplate.update(connection -> {
-                            PreparedStatement stmt = connection.prepareStatement(queryFilmsGenres, new String[]{"id"});
-                            stmt.setLong(1, film.getId());
-                            stmt.setLong(2, it.getId());
-                            return stmt;
-                        });
-                    }
-                });
-                List<Genre> genres = genreStorage.getGenresByFilmId(film.getId());
-                film.setGenres(new HashSet<>(genres));
+            if (!film.getGenres().isEmpty()) {
+                if (genreStorage.checkGenre(film.getGenres())) {
+                    String queryFilmsGenres = "INSERT INTO films_genres (films_id, genres_id) VALUES (?,?)";
+                    film.getGenres().forEach(it -> {
+                        if (!checkFilmGenre(film.getId(), it.getId())) {
+                            jdbcTemplate.update(connection -> {
+                                PreparedStatement stmt = connection.prepareStatement(queryFilmsGenres, new String[]{"id"});
+                                stmt.setLong(1, film.getId());
+                                stmt.setLong(2, it.getId());
+                                return stmt;
+                            });
+                        }
+                    });
+                    List<Genre> genres = genreStorage.getGenresByFilmId(film.getId());
+                    film.setGenres(genres);
+                } else {
+                    throw new FilmCreateException("Какого-то жанра не существует!");
+                }
             }
             return film;
         } else {
@@ -123,7 +127,7 @@ public class FilmDbStorage implements FilmStorage {
             String getQuery = "SELECT * FROM films WHERE id = ?";
             Film film = jdbcTemplate.queryForObject(getQuery, this::getRowMapperFilm, filmId);
             Rating rating = ratingStorage.getRatingById(film.getRatingId());
-            Set<Genre> genres = new HashSet<>(genreStorage.getGenresByFilmId(filmId));
+            List<Genre> genres = genreStorage.getGenresByFilmId(filmId);
             film.setLikesCount(getLikes(filmId));
             film.setMpa(rating);
             film.setGenres(genres);
@@ -140,10 +144,9 @@ public class FilmDbStorage implements FilmStorage {
         films.forEach(it -> {
             Rating rating = ratingStorage.getRatingById(it.getRatingId());
             it.setMpa(rating);
-        });
-        films.forEach(it -> {
-            Set<Genre> genres = new HashSet<>(genreStorage.getGenresByFilmId(it.getId()));
+            List<Genre> genres = genreStorage.getGenresByFilmId(it.getId());
             it.setGenres(genres);
+            it.setLikesCount(getLikes(it.getId()));
         });
         return films;
     }
