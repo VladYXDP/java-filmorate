@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.dto.rating.RatingDto;
 import ru.yandex.practicum.filmorate.dto.rating.RatingDtoMapper;
 import ru.yandex.practicum.filmorate.service.RatingService;
 
-import javax.websocket.server.PathParam;
 import java.util.List;
 import java.util.stream.Collectors;
 
