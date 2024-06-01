@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDtoMapper;
 import ru.yandex.practicum.filmorate.service.GenreService;
 
-import javax.websocket.server.PathParam;
 import java.util.List;
 import java.util.stream.Collectors;
 
