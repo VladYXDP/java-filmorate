@@ -1,10 +1,11 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Friends;
@@ -20,7 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Service("userDbStorage")
+@Component
+@Primary
 @RequiredArgsConstructor
 public class UserDbStorage implements UserStorage {
 
@@ -52,9 +54,9 @@ public class UserDbStorage implements UserStorage {
             String deleteQuery = "DELETE FROM users WHERE id = ?";
             String deleteFriends = "DELETE FROM friends WHERE user_id = ?";
             String deleteFromFriends = "DELETE FROM friends WHERE friend_id = ?";
-            jdbcTemplate.update(deleteQuery, user.getId());
             jdbcTemplate.update(deleteFriends, user.getId());
             jdbcTemplate.update(deleteFromFriends, user.getId());
+            jdbcTemplate.update(deleteQuery, user.getId());
             return user;
         }
         throw new UserNotFoundException("Ошибка удаления пользователя!");
@@ -156,8 +158,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     private Friends getRowMapperFriends(ResultSet resultSet, int rowNum) throws SQLException {
-        Friends friends = null;
-        friends = new Friends();
+        Friends friends = new Friends();
         friends.setFriendId(resultSet.getLong("friend_id"));
         friends.setUserId(resultSet.getLong("user_id"));
         return friends;

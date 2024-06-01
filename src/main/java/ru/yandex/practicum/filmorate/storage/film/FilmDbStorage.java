@@ -10,8 +10,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.film.FilmAlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
-import ru.yandex.practicum.filmorate.exception.rating.RatingNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
@@ -101,7 +99,7 @@ public class FilmDbStorage implements FilmStorage {
     public Film delete(Film film) {
         if (checkFilm(film.getId())) {
             String deleteQuery = "DELETE FROM FILMS WHERE id = ?";
-            String deleteFilmGenre = "DELETE FROM FILMS_GENRES WHERE film_id = ?";
+            String deleteFilmGenre = "DELETE FROM FILMS_GENRES WHERE films_id = ?";
             jdbcTemplate.update(deleteFilmGenre, film.getId());
             jdbcTemplate.update(deleteQuery, film.getId());
             return film;
@@ -126,10 +124,15 @@ public class FilmDbStorage implements FilmStorage {
         if (checkFilm(filmId)) {
             String getQuery = "SELECT * FROM films WHERE id = ?";
             Film film = jdbcTemplate.queryForObject(getQuery, this::getRowMapperFilm, filmId);
-            Rating rating = ratingStorage.getRatingById(film.getRatingId());
+            if (film.getRatingId() != null && film.getRatingId() > 0) {
+                Rating rating = ratingStorage.getRatingById(film.getRatingId());
+                film.setMpa(rating);
+                film.setRatingId(rating.getId());
+            } else {
+                film.setRatingId(null);
+            }
             List<Genre> genres = genreStorage.getGenresByFilmId(filmId);
             film.setLikesCount(getLikes(filmId));
-            film.setMpa(rating);
             film.setGenres(genres);
             return film;
         } else {
@@ -142,8 +145,11 @@ public class FilmDbStorage implements FilmStorage {
         String getAllQuery = "SELECT * FROM films";
         List<Film> films = jdbcTemplate.query(getAllQuery, this::getRowMapperFilm);
         films.forEach(it -> {
-            Rating rating = ratingStorage.getRatingById(it.getRatingId());
-            it.setMpa(rating);
+            if (it.getRatingId() > 0) {
+                Rating rating = ratingStorage.getRatingById(it.getRatingId());
+                it.setRatingId(rating.getId());
+                it.setMpa(rating);
+            }
             List<Genre> genres = genreStorage.getGenresByFilmId(it.getId());
             it.setGenres(genres);
             it.setLikesCount(getLikes(it.getId()));
