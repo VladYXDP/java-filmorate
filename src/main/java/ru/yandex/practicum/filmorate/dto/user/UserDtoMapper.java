@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.dto.user;
 
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
 
 @Component
