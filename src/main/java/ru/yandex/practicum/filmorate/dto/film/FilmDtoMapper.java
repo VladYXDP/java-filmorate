@@ -37,7 +37,7 @@ public class FilmDtoMapper {
             dto.setDescription(film.getDescription());
             dto.setDuration(film.getDuration());
             dto.setReleaseDate(film.getReleaseDate());
-            if(film.getMpa() != null) {
+            if (film.getMpa() != null) {
                 dto.setMpa(ratingDtoMapper.ratingToDto(film.getMpa()));
             }
             if (!film.getGenres().isEmpty()) {
