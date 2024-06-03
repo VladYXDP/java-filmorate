@@ -51,7 +51,7 @@ public class FilmDbStorage implements FilmStorage {
     private static final String SELECT_EXISTS_FILMS_GENRES = "SELECT EXISTS(SELECT 1 FROM films_genres WHERE films_id = ? AND genres_id = ?)";
 
     @Override
-    public Film add(Film film) {;
+    public Film add(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         if (film.getMpa() != null) {
             if (ratingStorage.checkRating(film.getMpa().getId())) {
