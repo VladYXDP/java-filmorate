@@ -32,7 +32,7 @@ public class UserDbStorage implements UserStorage {
     private static final String DELETE_USER = "DELETE FROM users WHERE id = ?";
     private static final String DELETE_USER_FROM_FRIEND = "DELETE FROM friends WHERE user_id = ?";
     private static final String DELETE_FROM_FRIEND = "DELETE FROM friends WHERE friend_id = ?";
-    private static final String UPDATE_USER = "UPDATE users SET email = ?, name = ?, login = ?, birthday = ?";
+    private static final String UPDATE_USER = "UPDATE users SET email = ?, name = ?, login = ?, birthday = ? WHERE id = ?";
     private static final String SELECT_USER = "SELECT * FROM users WHERE id = ?";
     private static final String SELECT_FRIENDS = "SELECT f.friend_id, f.user_id FROM friends AS f WHERE f.user_id = ?";
     private static final String SELECT_ALL_USERS = "SELECT * FROM users";
@@ -77,7 +77,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User update(User user) {
         if (checkUserById(user.getId())) {
-            jdbcTemplate.update(UPDATE_USER, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday());
+            jdbcTemplate.update(UPDATE_USER, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday(), user.getId());
             return user;
         }
         throw new UserNotFoundException("Ошибка обновления пользователя!");
