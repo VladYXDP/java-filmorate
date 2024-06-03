@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.dto.rating.RatingDto;
 import ru.yandex.practicum.filmorate.dto.rating.RatingDtoMapper;
 import ru.yandex.practicum.filmorate.service.RatingService;
 
+import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,7 @@ public class RatingController {
     private final RatingDtoMapper ratingDtoMapper;
 
     @GetMapping(path = "/{id}")
-    public RatingDto getRating(@PathVariable("id") long id) {
+    public RatingDto getRating(@Positive(message = "id должен быть больше 0") @PathVariable("id") long id) {
         log.info("Запрос на получение рейтинга по id = " + id);
         return ratingDtoMapper.ratingToDto(ratingService.getRating(id));
     }

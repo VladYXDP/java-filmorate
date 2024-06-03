@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDtoMapper;
 import ru.yandex.practicum.filmorate.service.GenreService;
 
+import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,7 @@ public class GenreController {
     private final GenreDtoMapper genreDtoMapper;
 
     @GetMapping(path = "/{id}")
-    public GenreDto getGenre(@PathVariable long id) {
+    public GenreDto getGenre(@Positive(message = "id должен быть больше 0") @PathVariable long id) {
         log.info("Запрос на получение жанра по id = " + id);
         return genreDtoMapper.genreToDto(genreService.getGenre(id));
     }

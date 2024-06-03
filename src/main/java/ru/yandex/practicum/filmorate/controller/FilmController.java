@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public FilmDto getFilm(@PathVariable long id) {
+    public FilmDto getFilm(@Positive(message = "id фильма должен быть больше 0") @PathVariable long id) {
         log.info(String.format("Получить фильм с %d ", id));
         return filmDtoTransfer.filmToDto(filmService.getFilmById(id));
     }
@@ -57,19 +58,21 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public void likeFilm(@PathVariable long id, @PathVariable long userId) {
+    public void likeFilm(@Positive(message = "id фильма должен быть больше 0") @PathVariable long id,
+                         @Positive(message = "id пользователя должен быть больше 0") @PathVariable long userId) {
         log.info(String.format("Пользователь с %d поставил лайк фильму с %d", userId, id));
         filmService.addLike(userId, id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void deleteLike(@PathVariable long id, @PathVariable long userId) {
+    public void deleteLike(@Positive(message = "id фильма должен быть больше 0") @PathVariable long id,
+                           @Positive(message = "id пользователя должен быть больше 0") @PathVariable long userId) {
         log.info(String.format("Пользователь с %d удаляет лайк с фильма с %d", userId, id));
         filmService.deleteLike(userId, id);
     }
 
     @GetMapping("/popular")
-    public List<FilmDto> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
+    public List<FilmDto> getPopularFilms(@Positive(message = "Количество фильмов должно быть больше 0") @RequestParam(required = false, defaultValue = "10") int count) {
         log.info(String.format("Вывод %d популярных фильмов", count));
         return filmService.getPopularFilms(count).stream()
                 .map(filmDtoTransfer::filmToDto)

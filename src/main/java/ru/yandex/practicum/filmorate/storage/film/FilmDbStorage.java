@@ -106,8 +106,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         if (checkFilm(film.getId())) {
-            String updateQuery = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?";
-            jdbcTemplate.update(updateQuery, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration());
+            String updateQuery = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ? WHERE id = ?";
+            jdbcTemplate.update(updateQuery, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), film.getId());
             return film;
         } else {
             throw new FilmNotFoundException("Ошибка обновления фильма " + film.getName() + "!");
