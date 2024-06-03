@@ -28,13 +28,28 @@ public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
+    private static final String INSERT_USER = "INSERT INTO users (email, name, birthday, login) VALUES (?,?,?,?)";
+    private static final String DELETE_USER = "DELETE FROM users WHERE id = ?";
+    private static final String DELETE_USER_FROM_FRIEND = "DELETE FROM friends WHERE user_id = ?";
+    private static final String DELETE_FROM_FRIEND = "DELETE FROM friends WHERE friend_id = ?";
+    private static final String UPDATE_USER = "UPDATE users SET email = ?, name = ?, login = ?, birthday = ?";
+    private static final String SELECT_USER = "SELECT * FROM users WHERE id = ?";
+    private static final String SELECT_FRIENDS = "SELECT f.friend_id, f.user_id FROM friends AS f WHERE f.user_id = ?";
+    private static final String SELECT_ALL_USERS = "SELECT * FROM users";
+    private static final String INSERT_FRIENDS = "INSERT INTO friends (user_id, friend_id) VALUES (?,?)";
+    private static final String DELETE_BY_USER_AND_FRIEND = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
+    private static final String SELECT_EXISTS_USER_BY_ID = "SELECT EXISTS(SELECT 1 FROM USERS WHERE id = ?)";
+    private static final String SELECT_EXISTS_USER_BY_USER = "SELECT EXISTS(SELECT 1 FROM USERS WHERE EMAIL = ? OR LOGIN = ?)";
+    private static final String SELECT_EXISTS_FRIEND_BY_USER_AND_FRIEND_ID = "SELECT EXISTS(SELECT 1 FROM FRIENDS WHERE user_id = ? AND friend_id = ?)";
+    private static final String SELECT_EXISTS_FRIEND_BY_USER_ID = "SELECT EXISTS(SELECT 1 FROM FRIENDS WHERE user_id = ?)";
+
+
     @Override
     public User add(User user) {
         if (!checkUser(user)) {
-            String addQuery = "INSERT INTO users (email, name, birthday, login) VALUES (?,?,?,?)";
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
-                PreparedStatement stmt = connection.prepareStatement(addQuery, new String[]{"id"});
+                PreparedStatement stmt = connection.prepareStatement(INSERT_USER, new String[]{"id"});
                 stmt.setString(1, user.getEmail());
                 stmt.setString(2, user.getName());
                 stmt.setDate(3, Date.valueOf(user.getBirthday()));
@@ -51,12 +66,9 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User delete(User user) {
         if (checkUserById(user.getId())) {
-            String deleteQuery = "DELETE FROM users WHERE id = ?";
-            String deleteFriends = "DELETE FROM friends WHERE user_id = ?";
-            String deleteFromFriends = "DELETE FROM friends WHERE friend_id = ?";
-            jdbcTemplate.update(deleteFriends, user.getId());
-            jdbcTemplate.update(deleteFromFriends, user.getId());
-            jdbcTemplate.update(deleteQuery, user.getId());
+            jdbcTemplate.update(DELETE_USER_FROM_FRIEND, user.getId());
+            jdbcTemplate.update(DELETE_FROM_FRIEND, user.getId());
+            jdbcTemplate.update(DELETE_USER, user.getId());
             return user;
         }
         throw new UserNotFoundException("Ошибка удаления пользователя!");
@@ -65,8 +77,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User update(User user) {
         if (checkUserById(user.getId())) {
-            String updateQuery = "UPDATE users SET email = ?, name = ?, login = ?, birthday = ?";
-            jdbcTemplate.update(updateQuery, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday());
+            jdbcTemplate.update(UPDATE_USER, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday());
             return user;
         }
         throw new UserNotFoundException("Ошибка обновления пользователя!");
@@ -76,11 +87,9 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User get(long id) {
         if (checkUserById(id)) {
-            String getQuery = "SELECT * FROM users WHERE id = ?";
-            String getFriendsQuery = "SELECT f.friend_id, f.user_id FROM friends AS f WHERE f.user_id = ?";
-            User user = jdbcTemplate.queryForObject(getQuery, this::getRowMapperUser, id);
+            User user = jdbcTemplate.queryForObject(SELECT_USER, this::getRowMapperUser, id);
             if (checkFriends(id)) {
-                List<Friends> friends = jdbcTemplate.query(getFriendsQuery, this::getRowMapperFriends, id);
+                List<Friends> friends = jdbcTemplate.query(SELECT_FRIENDS, this::getRowMapperFriends, id);
                 List<Long> friendIds = friends.stream().map(Friends::getFriendId).collect(Collectors.toList());
                 user.setFriends(new HashSet<>(friendIds));
             } else {
@@ -94,17 +103,15 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getAllUser() {
-        String getAllQuery = "SELECT * FROM users";
-        return jdbcTemplate.query(getAllQuery, this::getRowMapperUser);
+        return jdbcTemplate.query(SELECT_ALL_USERS, this::getRowMapperUser);
     }
 
     public void addFriend(long userId, long friendId) {
         if (checkUserById(userId) && checkUserById(friendId)) {
-            String addUserToFriendQuery = "INSERT INTO friends (user_id, friend_id) VALUES (?,?)";
             boolean user = checkFriendsById(userId, friendId);
             if (!user) {
                 jdbcTemplate.update(connection -> {
-                    PreparedStatement stmt = connection.prepareStatement(addUserToFriendQuery, new String[]{"id"});
+                    PreparedStatement stmt = connection.prepareStatement(INSERT_FRIENDS, new String[]{"id"});
                     stmt.setLong(1, userId);
                     stmt.setLong(2, friendId);
                     return stmt;
@@ -120,31 +127,26 @@ public class UserDbStorage implements UserStorage {
 
     public void removeFriend(long userId, long friendId) {
         if (checkUserById(userId) && checkUserById(friendId)) {
-            String deleteFriendsQuery = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
-            jdbcTemplate.update(deleteFriendsQuery, userId, friendId);
+            jdbcTemplate.update(DELETE_BY_USER_AND_FRIEND, userId, friendId);
         } else {
             throw new UserNotFoundException("Для добавления в друзья пользователи не найдены!");
         }
     }
 
     private boolean checkUserById(long id) {
-        String existsUserByIdQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE id = ?)";
-        return jdbcTemplate.queryForObject(existsUserByIdQuery, Boolean.class, id);
+        return jdbcTemplate.queryForObject(SELECT_EXISTS_USER_BY_ID, Boolean.class, id);
     }
 
     private boolean checkUser(User user) {
-        String existsUserQuery = "SELECT EXISTS(SELECT 1 FROM USERS WHERE EMAIL = ? OR LOGIN = ?)";
-        return jdbcTemplate.queryForObject(existsUserQuery, Boolean.class, user.getEmail(), user.getLogin());
+        return jdbcTemplate.queryForObject(SELECT_EXISTS_USER_BY_USER, Boolean.class, user.getEmail(), user.getLogin());
     }
 
     private boolean checkFriendsById(long userId, long friendId) {
-        String existsFriendQuery = "SELECT EXISTS(SELECT 1 FROM FRIENDS WHERE user_id = ? AND friend_id = ?)";
-        return jdbcTemplate.queryForObject(existsFriendQuery, Boolean.class, userId, friendId);
+        return jdbcTemplate.queryForObject(SELECT_EXISTS_FRIEND_BY_USER_AND_FRIEND_ID, Boolean.class, userId, friendId);
     }
 
     private boolean checkFriends(long userId) {
-        String checkFriendQuery = "SELECT EXISTS(SELECT 1 FROM FRIENDS WHERE user_id = ?)";
-        return jdbcTemplate.queryForObject(checkFriendQuery, Boolean.class, userId);
+        return jdbcTemplate.queryForObject(SELECT_EXISTS_FRIEND_BY_USER_ID, Boolean.class, userId);
     }
 
     private User getRowMapperUser(ResultSet resultSet, int rowNum) throws SQLException {

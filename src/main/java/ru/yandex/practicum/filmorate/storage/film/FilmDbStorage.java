@@ -35,15 +35,28 @@ public class FilmDbStorage implements FilmStorage {
     @Qualifier("userDbStorage")
     private UserStorage userStorage;
 
+    private static final String INSERT_FILM_WITH_MPA = "INSERT INTO FILMS (name, description, release_date, duration, rating_id) VALUES (?,?,?,?,?)";
+    private static final String INSERT_FILM_WITHOUT_MPA = "INSERT INTO FILMS (name, description, release_date, duration) VALUES (?,?,?,?)";
+    private static final String INSERT_FILMS_GENRES = "INSERT INTO films_genres (films_id, genres_id) VALUES (?,?)";
+    private static final String DELETE_FILM = "DELETE FROM FILMS WHERE id = ?";
+    private static final String DELETE_FILMS_GENRES = "DELETE FROM FILMS_GENRES WHERE films_id = ?";
+    private static final String UPDATE_FILM = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ? WHERE id = ?";
+    private static final String SELECT_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
+    private static final String SELECT_FILMS = "SELECT * FROM films";
+    private static final String INSERT_LIKE = "INSERT INTO likes (user_id, film_id) VALUES(?,?)";
+    private static final String DELETE_LIKE = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
+    private static final String SELECT_LIKES = "SELECT count(*) FROM likes WHERE film_id = ?";
+    private static final String SELECT_EXISTS_FILM = "SELECT EXISTS(SELECT 1 FROM FILMS WHERE id = ?)";
+    private static final String SELECT_EXISTS_LIKE = "SELECT EXISTS(SELECT 1 FROM LIKES WHERE user_id = ? AND film_id = ?)";
+    private static final String SELECT_EXISTS_FILMS_GENRES = "SELECT EXISTS(SELECT 1 FROM films_genres WHERE films_id = ? AND genres_id = ?)";
+
     @Override
-    public Film add(Film film) {
-        String addQuery;
+    public Film add(Film film) {;
         KeyHolder keyHolder = new GeneratedKeyHolder();
         if (film.getMpa() != null) {
             if (ratingStorage.checkRating(film.getMpa().getId())) {
-                addQuery = "INSERT INTO FILMS (name, description, release_date, duration, rating_id) VALUES (?,?,?,?,?)";
                 jdbcTemplate.update(connection -> {
-                    PreparedStatement stmt = connection.prepareStatement(addQuery, new String[]{"id"});
+                    PreparedStatement stmt = connection.prepareStatement(INSERT_FILM_WITH_MPA, new String[]{"id"});
                     stmt.setString(1, film.getName());
                     stmt.setString(2, film.getDescription());
                     stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
@@ -57,9 +70,8 @@ public class FilmDbStorage implements FilmStorage {
                 throw new FilmCreateException("Рейтинг фильма с id " + film.getMpa().getId() + " не найден!");
             }
         } else {
-            addQuery = "INSERT INTO FILMS (name, description, release_date, duration) VALUES (?,?,?,?)";
             jdbcTemplate.update(connection -> {
-                PreparedStatement stmt = connection.prepareStatement(addQuery, new String[]{"id"});
+                PreparedStatement stmt = connection.prepareStatement(INSERT_FILM_WITHOUT_MPA, new String[]{"id"});
                 stmt.setString(1, film.getName());
                 stmt.setString(2, film.getDescription());
                 stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
@@ -70,11 +82,10 @@ public class FilmDbStorage implements FilmStorage {
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         if (!film.getGenres().isEmpty()) {
             if (genreStorage.checkGenre(film.getGenres())) {
-                String queryFilmsGenres = "INSERT INTO films_genres (films_id, genres_id) VALUES (?,?)";
                 film.getGenres().forEach(it -> {
                     if (!checkFilmGenre(film.getId(), it.getId())) {
                         jdbcTemplate.update(connection -> {
-                            PreparedStatement stmt = connection.prepareStatement(queryFilmsGenres, new String[]{"id"});
+                            PreparedStatement stmt = connection.prepareStatement(INSERT_FILMS_GENRES, new String[]{"id"});
                             stmt.setLong(1, film.getId());
                             stmt.setLong(2, it.getId());
                             return stmt;
@@ -93,10 +104,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film delete(Film film) {
         if (checkFilm(film.getId())) {
-            String deleteQuery = "DELETE FROM FILMS WHERE id = ?";
-            String deleteFilmGenre = "DELETE FROM FILMS_GENRES WHERE films_id = ?";
-            jdbcTemplate.update(deleteFilmGenre, film.getId());
-            jdbcTemplate.update(deleteQuery, film.getId());
+            jdbcTemplate.update(DELETE_FILMS_GENRES, film.getId());
+            jdbcTemplate.update(DELETE_FILM, film.getId());
             return film;
         } else {
             throw new FilmNotFoundException("Ошибка удаления фильма " + film.getName() + "!");
@@ -106,8 +115,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         if (checkFilm(film.getId())) {
-            String updateQuery = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ? WHERE id = ?";
-            jdbcTemplate.update(updateQuery, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), film.getId());
+            jdbcTemplate.update(UPDATE_FILM, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), film.getId());
             return film;
         } else {
             throw new FilmNotFoundException("Ошибка обновления фильма " + film.getName() + "!");
@@ -117,8 +125,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film get(long filmId) {
         if (checkFilm(filmId)) {
-            String getQuery = "SELECT * FROM films WHERE id = ?";
-            Film film = jdbcTemplate.queryForObject(getQuery, this::getRowMapperFilm, filmId);
+            Film film = jdbcTemplate.queryForObject(SELECT_FILM_BY_ID, this::getRowMapperFilm, filmId);
             if (film.getRatingId() != null && film.getRatingId() > 0) {
                 Rating rating = ratingStorage.getRatingById(film.getRatingId());
                 film.setMpa(rating);
@@ -137,8 +144,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getAllFilms() {
-        String getAllQuery = "SELECT * FROM films";
-        List<Film> films = jdbcTemplate.query(getAllQuery, this::getRowMapperFilm);
+        List<Film> films = jdbcTemplate.query(SELECT_FILMS, this::getRowMapperFilm);
         films.forEach(it -> {
             if (it.getRatingId() > 0) {
                 Rating rating = ratingStorage.getRatingById(it.getRatingId());
@@ -157,9 +163,8 @@ public class FilmDbStorage implements FilmStorage {
         if (!checkLike(userId, filmId)) {
             userStorage.get(userId);
             get(filmId);
-            String addLikeQuery = "INSERT INTO likes (user_id, film_id) VALUES(?,?)";
             jdbcTemplate.update(connection -> {
-                PreparedStatement stmt = connection.prepareStatement(addLikeQuery, new String[]{"id"});
+                PreparedStatement stmt = connection.prepareStatement(INSERT_LIKE, new String[]{"id"});
                 stmt.setLong(1, userId);
                 stmt.setLong(2, filmId);
                 return stmt;
@@ -170,29 +175,24 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void deleteLike(long userId, long filmId) {
         if (checkLike(userId, filmId)) {
-            String deleteLikeQuery = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
-            jdbcTemplate.update(deleteLikeQuery, userId, filmId);
+            jdbcTemplate.update(DELETE_LIKE, userId, filmId);
         }
     }
 
     private long getLikes(long filmId) {
-        String likesCount = "SELECT count(*) FROM likes WHERE film_id = ?";
-        return jdbcTemplate.queryForObject(likesCount, Long.class, filmId);
+        return jdbcTemplate.queryForObject(SELECT_LIKES, Long.class, filmId);
     }
 
     private boolean checkFilm(long id) {
-        String checkQuery = "SELECT EXISTS(SELECT 1 FROM FILMS WHERE id = ?)";
-        return jdbcTemplate.queryForObject(checkQuery, Boolean.class, id);
+        return jdbcTemplate.queryForObject(SELECT_EXISTS_FILM, Boolean.class, id);
     }
 
     private boolean checkLike(long userId, long filmId) {
-        String checkLikeQuery = "SELECT EXISTS(SELECT 1 FROM LIKES WHERE user_id = ? AND film_id = ?)";
-        return jdbcTemplate.queryForObject(checkLikeQuery, Boolean.class, userId, filmId);
+        return jdbcTemplate.queryForObject(SELECT_EXISTS_LIKE, Boolean.class, userId, filmId);
     }
 
     private boolean checkFilmGenre(long filmId, long genreId) {
-        String checkQuery = "SELECT EXISTS(SELECT 1 FROM films_genres WHERE films_id = ? AND genres_id = ?)";
-        return jdbcTemplate.queryForObject(checkQuery, Boolean.class, filmId, genreId);
+        return jdbcTemplate.queryForObject(SELECT_EXISTS_FILMS_GENRES, Boolean.class, filmId, genreId);
     }
 
     private Film getRowMapperFilm(ResultSet resultSet, int rowNum) throws SQLException {

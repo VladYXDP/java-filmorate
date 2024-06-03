@@ -16,28 +16,29 @@ public class GenreStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
+    private static final String SELECT_GENRES = "SELECT * FROM GENRES WHERE id = ?";
+    private static final String SELECT_ALL_GENRES = "SELECT * FROM GENRES";
+    private static final String SELECT_EXISTS_GENRES = "SELECT EXISTS(SELECT 1 FROM GENRES WHERE id = ?)";
+    private static final String SELECT_GENRES_BY_FILM = "SELECT g.id, g.name " +
+            "FROM FILMS_GENRES AS fg " +
+            "INNER JOIN GENRES AS g ON g.id = fg.genres_id " +
+            "WHERE fg.films_id = ? " +
+            "ORDER BY g.id ASC";
+
     public Genre getGenreById(long id) {
-        String genreQuery = "SELECT * FROM GENRES WHERE id = ?";
-        List<Genre> genre = jdbcTemplate.query(genreQuery, this::getGenreMapper, id);
+        List<Genre> genre = jdbcTemplate.query(SELECT_GENRES, this::getGenreMapper, id);
         if (genre.size() != 1) {
             throw new GenreNotFoundException("Жанр с id " + id + " не найден!");
         }
-        return jdbcTemplate.queryForObject(genreQuery, this::getGenreMapper, id);
+        return jdbcTemplate.queryForObject(SELECT_GENRES, this::getGenreMapper, id);
     }
 
     public List<Genre> getAllGenres() {
-        String genresQuery = "SELECT * FROM GENRES";
-        return jdbcTemplate.query(genresQuery, this::getGenreMapper);
-    }
-
-    public boolean checkGenre(String name) {
-        String checkQuery = "SELECT EXISTS(SELECT 1 FROM GENRES WHERE name = ?)";
-        return jdbcTemplate.queryForObject(checkQuery, Boolean.class, name);
+        return jdbcTemplate.query(SELECT_ALL_GENRES, this::getGenreMapper);
     }
 
     public boolean checkGenre(long id) {
-        String checkQuery = "SELECT EXISTS(SELECT 1 FROM GENRES WHERE id = ?)";
-        return jdbcTemplate.queryForObject(checkQuery, Boolean.class, id);
+        return jdbcTemplate.queryForObject(SELECT_EXISTS_GENRES, Boolean.class, id);
     }
 
     public boolean checkGenre(List<Genre> genres) {
@@ -45,12 +46,7 @@ public class GenreStorage {
     }
 
     public List<Genre> getGenresByFilmId(long filmId) {
-        String getGenresQuery = "SELECT g.id, g.name" +
-                "    FROM FILMS_GENRES AS fg" +
-                "        INNER JOIN GENRES AS g ON g.id = fg.genres_id" +
-                "    WHERE fg.films_id = ?" +
-                "    ORDER BY g.id ASC";
-        return jdbcTemplate.query(getGenresQuery, this::getGenreMapper, filmId);
+        return jdbcTemplate.query(SELECT_GENRES_BY_FILM, this::getGenreMapper, filmId);
     }
 
     private Genre getGenreMapper(ResultSet resultSet, int rowNum) throws SQLException {
