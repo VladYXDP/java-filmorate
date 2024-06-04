@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dto;
+package ru.yandex.practicum.filmorate.dto.user;
 
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;

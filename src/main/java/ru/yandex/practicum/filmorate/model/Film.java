@@ -4,7 +4,9 @@ import lombok.Data;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -17,6 +19,9 @@ public class Film {
     private Duration duration;
     private Set<Long> likes = new HashSet<>();
     private Long likesCount = 0L;
+    private Long ratingId;
+    private Rating mpa;
+    private List<Genre> genres = new ArrayList<>();
 
     public void addLike(long userId) {
         likes.add(userId);
