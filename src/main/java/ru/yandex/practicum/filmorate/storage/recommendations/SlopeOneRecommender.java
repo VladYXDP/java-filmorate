@@ -67,15 +67,19 @@ public class SlopeOneRecommender {
         //Проходим по оценкам текущего пользователя
         for (Map.Entry<Long, Integer> userRating : userRatings.entrySet()) {
             //Проходим по всем фильмам в матрице различий
-            for (Long j : differencesMatrix.keySet()) {
-                //Вычисляем новое значение прогнозируемой оценки
-                double newVal = (differencesMatrix.get(j).get(userRating.getKey()) + userRating.getValue())
-                                * frequenciesMatrix.get(j).get(userRating.getKey());
-                //Обновляем значение прогнозируемой оценки для фильма j
-                predictions.put(j, predictions.get(j) + newVal);
-                //Обновляем значение частоты для фильма j
-                frequencies.put(j, frequencies.get(j) + frequenciesMatrix.get(j).get(userRating.getKey()));
 
+            for (Long j : differencesMatrix.keySet()) {
+                try {
+                    //Вычисляем новое значение прогнозируемой оценки
+                    double newVal = (differencesMatrix.get(j).get(userRating.getKey()) + userRating.getValue())
+                                    * frequenciesMatrix.get(j).get(userRating.getKey());
+                    //Обновляем значение прогнозируемой оценки для фильма j
+                    predictions.put(j, predictions.get(j) + newVal);
+                    //Обновляем значение частоты для фильма j
+                    frequencies.put(j, frequencies.get(j) + frequenciesMatrix.get(j).get(userRating.getKey()));
+                } catch (NullPointerException e) {
+                    // Ignore null pointers
+                }
             }
         }
 
@@ -100,7 +104,8 @@ public class SlopeOneRecommender {
         Map<Long, Double> predictions = predict(userRatings);
         //Создаем список прогнозируемых оценок
         List<Map.Entry<Long, Double>> recommendations = new ArrayList<>(predictions.entrySet());
-
+        //Сортирует фильмы в порядке убывания количества лайков
+        recommendations.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
         List<Film> recommendedFilms = new ArrayList<>();
         //Проходим по всем прогнозируемым оценкам
         for (Map.Entry<Long, Double> entry : recommendations) {

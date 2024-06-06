@@ -20,7 +20,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
@@ -60,7 +59,7 @@ public class FilmDbStorage implements FilmStorage {
                     stmt.setString(1, film.getName());
                     stmt.setString(2, film.getDescription());
                     stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
-                    stmt.setLong(4, film.getDuration().getSeconds());
+                    stmt.setLong(4, film.getDuration());
                     stmt.setLong(5, film.getMpa().getId());
                     return stmt;
                 }, keyHolder);
@@ -75,7 +74,7 @@ public class FilmDbStorage implements FilmStorage {
                 stmt.setString(1, film.getName());
                 stmt.setString(2, film.getDescription());
                 stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
-                stmt.setLong(4, film.getDuration().getSeconds());
+                stmt.setLong(4, film.getDuration());
                 return stmt;
             }, keyHolder);
         }
@@ -201,7 +200,7 @@ public class FilmDbStorage implements FilmStorage {
         film.setName(resultSet.getString("name"));
         film.setDescription(resultSet.getString("description"));
         film.setReleaseDate(resultSet.getDate("release_date").toLocalDate());
-        film.setDuration(Duration.ofSeconds(resultSet.getLong("duration")));
+        film.setDuration(resultSet.getLong("duration"));
         film.setRatingId(resultSet.getLong("rating_id"));
         return film;
     }

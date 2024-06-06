@@ -146,7 +146,7 @@ class FilmoRateApplicationTests {
         film.setName("Test Film");
         film.setDescription("Desc film");
         film.setReleaseDate(LocalDate.now());
-        film.setDuration(Duration.ofMinutes(120L));
+        film.setDuration(120L);
         film.setRatingId(1L);
         film.setMpa(new Rating(1,"G"));
         return film;
@@ -157,7 +157,7 @@ class FilmoRateApplicationTests {
         film.setName("Test Film2");
         film.setDescription("Desc film2");
         film.setReleaseDate(LocalDate.now().minusDays(100));
-        film.setDuration(Duration.ofMinutes(120L));
+        film.setDuration(120L);
         film.setRatingId(1L);
         return film;
     }

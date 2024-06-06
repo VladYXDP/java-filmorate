@@ -26,7 +26,7 @@ public class FilmController {
     @PostMapping
     public FilmDto addFilm(@Valid @RequestBody FilmDto filmDto) {
         Film film;
-        if (filmDto != null && !filmDto.getDuration().isNegative()) {
+        if (filmDto != null && filmDto.getDuration()>=0) {
             film = filmService.addFilm(filmDtoTransfer.dtoToFilm(filmDto));
             log.info(String.format("Фильм %s успешно добавлен!", film.getName()));
         } else {
