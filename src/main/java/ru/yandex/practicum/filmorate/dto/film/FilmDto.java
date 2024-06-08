@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dto.film;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
 import ru.yandex.practicum.filmorate.dto.rating.RatingDto;
 import ru.yandex.practicum.filmorate.formatter.DurationDeserializeFormatter;
@@ -37,4 +38,5 @@ public class FilmDto {
     private Long likeCount;
     private RatingDto mpa;
     private List<GenreDto> genres = new ArrayList<>();
+    private List<DirectorDto> directors = new ArrayList<>();
 }
