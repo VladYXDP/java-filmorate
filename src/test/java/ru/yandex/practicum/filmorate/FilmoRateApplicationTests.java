@@ -18,7 +18,6 @@ import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -148,7 +147,7 @@ class FilmoRateApplicationTests {
         film.setReleaseDate(LocalDate.now());
         film.setDuration(120L);
         film.setRatingId(1L);
-        film.setMpa(new Rating(1,"G"));
+        film.setMpa(new Rating(1, "G"));
         return film;
     }
 
