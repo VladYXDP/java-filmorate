@@ -34,7 +34,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Set<Review> getAllById(long id, long count) {
+    public Set<Review> getAllById(long filmId, long count) {
         return null;
     }
 

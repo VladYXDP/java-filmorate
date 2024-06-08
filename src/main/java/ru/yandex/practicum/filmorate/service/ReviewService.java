@@ -29,8 +29,8 @@ public class ReviewService {
         return reviewDbStorage.get(id);
     }
 
-    public Set<Review> getAllReviewsById(long id, long count) {
-        return reviewDbStorage.getAllById(id, count);
+    public Set<Review> getAllById(long filmId, long count) {
+        return reviewDbStorage.getAllById(filmId, count);
     }
 
     public void like(long id, long userId) {

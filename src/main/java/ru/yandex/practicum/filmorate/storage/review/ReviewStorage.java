@@ -9,7 +9,7 @@ public interface ReviewStorage {
     void update();
     void delete(long id);
     Review get(long id);
-    Set<Review> getAllById(long id, long count);
+    Set<Review> getAllById(long filmId, long count);
     void like(long id, long userId);
     void dislike(long id, long userId);
     void deleteLike(long id, long userId);
