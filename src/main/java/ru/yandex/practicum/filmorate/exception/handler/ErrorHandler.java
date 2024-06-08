@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.exception.handler;
 
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -16,9 +17,8 @@ import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.exception.rating.RatingNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 
-import java.util.Map;
-
-@RestControllerAdvice(assignableTypes = {UserController.class, FilmController.class, RatingController.class, GenreController.class})
+@RestControllerAdvice(assignableTypes = {UserController.class, FilmController.class, RatingController.class,
+        GenreController.class})
 public class ErrorHandler {
 
     @ExceptionHandler
