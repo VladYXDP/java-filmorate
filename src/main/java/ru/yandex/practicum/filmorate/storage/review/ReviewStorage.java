@@ -5,8 +5,8 @@ import ru.yandex.practicum.filmorate.model.Review;
 import java.util.Set;
 
 public interface ReviewStorage {
-    Review create(Review post);
-    void update();
+    Review create(Review review);
+    Review update(Review review);
     void delete(long id);
     Review get(long id);
     Set<Review> getAllById(long filmId, long count);

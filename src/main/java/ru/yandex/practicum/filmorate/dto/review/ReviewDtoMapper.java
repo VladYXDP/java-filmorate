@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.model.Review;
 @Component
 public class ReviewDtoMapper {
 
-    public Review dtoToPost(ReviewDto dto) {
+    public Review dtoToReview(ReviewDto dto) {
         Review post = new Review();
         post.setReviewId(dto.getReviewId());
         post.setContent(dto.getContent());
@@ -17,7 +17,7 @@ public class ReviewDtoMapper {
         return post;
     }
 
-    public ReviewDto postToDto(Review post) {
+    public ReviewDto reviewToDto(Review post) {
         ReviewDto dto = new ReviewDto();
         dto.setReviewId(post.getReviewId());
         dto.setContent(post.getContent());

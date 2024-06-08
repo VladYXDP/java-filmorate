@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
 import java.util.Set;
 
@@ -11,41 +11,41 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ReviewService {
 
-    private final ReviewDbStorage reviewDbStorage;
+    private final ReviewStorage reviewStorage;
 
     public Review create(Review review) {
-        return reviewDbStorage.create(review);
+        return reviewStorage.create(review);
     }
 
-    public void update(long id) {
-        reviewDbStorage.update();
+    public Review update(Review review) {
+        return reviewStorage.update(review);
     }
 
     public void delete(long id) {
-        reviewDbStorage.delete(id);
+        reviewStorage.delete(id);
     }
 
     public Review get(long id) {
-        return reviewDbStorage.get(id);
+        return reviewStorage.get(id);
     }
 
     public Set<Review> getAllById(long filmId, long count) {
-        return reviewDbStorage.getAllById(filmId, count);
+        return reviewStorage.getAllById(filmId, count);
     }
 
     public void like(long id, long userId) {
-        reviewDbStorage.like(id, userId);
+        reviewStorage.like(id, userId);
     }
 
     public void dislike(long id, long userId) {
-        reviewDbStorage.dislike(id, userId);
+        reviewStorage.dislike(id, userId);
     }
 
     public void deleteLike(long id, long userId) {
-        reviewDbStorage.deleteLike(id, userId);
+        reviewStorage.deleteLike(id, userId);
     }
 
     public void deleteDislike(long id, long userId) {
-        reviewDbStorage.deleteDislike(id, userId);
+        reviewStorage.deleteDislike(id, userId);
     }
 }

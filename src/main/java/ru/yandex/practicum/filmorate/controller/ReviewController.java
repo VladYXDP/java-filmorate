@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.review.ReviewDto;
 import ru.yandex.practicum.filmorate.dto.review.ReviewDtoMapper;
+import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import javax.validation.Valid;
@@ -23,14 +24,15 @@ public class ReviewController {
 
     @PostMapping
     public ReviewDto create(@Valid @RequestBody ReviewDto dto) {
-        log.info("Запрос на создания отзыва о фильме" + dto.getFilmId() + " пользователем " + dto.getUserId());
-        return reviewDtoMapper.postToDto(reviewService.create(reviewDtoMapper.dtoToPost(dto)));
+        log.info("Запрос на создание отзыва о фильме" + dto.getFilmId() + " пользователем " + dto.getUserId());
+        return reviewDtoMapper.reviewToDto(reviewService.create(reviewDtoMapper.dtoToReview(dto)));
     }
 
-    @PutMapping("/{id}")
-    public void update(@Positive @PathVariable Long id) {
-        log.info("Редактирования отзыва " + id);
-        reviewService.update(id);
+    @PutMapping
+    public ReviewDto update(@Positive @RequestBody ReviewDto dto) {
+        log.info("Редактирования отзыва " + dto.getReviewId());
+        Review review = reviewService.update(reviewDtoMapper.dtoToReview(dto));
+        return reviewDtoMapper.reviewToDto(review);
     }
 
     @DeleteMapping("/{id}")
@@ -42,7 +44,7 @@ public class ReviewController {
     @GetMapping("/{id}")
     public ReviewDto get(@Positive @PathVariable Long id) {
         log.info("Получить отзыв " + id);
-        return reviewDtoMapper.postToDto(reviewService.get(id));
+        return reviewDtoMapper.reviewToDto(reviewService.get(id));
     }
 
     @GetMapping
@@ -51,7 +53,7 @@ public class ReviewController {
         log.info("Получить список отзывов фильма " + filmId);
         return reviewService.getAllById(filmId, count)
                 .stream()
-                .map(reviewDtoMapper::postToDto)
+                .map(reviewDtoMapper::reviewToDto)
                 .collect(Collectors.toSet());
     }
 
