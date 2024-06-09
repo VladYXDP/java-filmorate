@@ -13,6 +13,8 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -39,6 +41,7 @@ public class ReviewDbStorage implements ReviewStorage {
     private static final String DELETE_DISLIKES_REVIEW = "DELETE FROM dislikes_review WHERE id = ?";
     private static final String SELECT_EXISTS_LIKES_BY_ID = "SELECT EXISTS(SELECT 1 FROM likes_review WHERE id = ?";
     private static final String SELECT_EXISTS_DISLIKES_BY_ID = "SELECT EXISTS(SELECT 1 FROM dislikes_review WHERE id = ?)";
+    private static final String SELECT_ALL_REVIEWS = "SELECT * FROM reviews AS r GROUP BY film_id = ? ORDER BY DESC useful LIMIT ?";
 
 
     @Override
@@ -94,8 +97,9 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Set<Review> getAllById(long filmId, long count) {
-        // TODO: 09.06.2024 Написать сложный запрос
-        return null;
+        filmStorage.get(filmId);
+        List<Review> reviews = jdbcTemplate.query(SELECT_ALL_REVIEWS, this::getRowMapperReview, filmId, count);
+        return new HashSet<>(reviews);
     }
 
     @Override
