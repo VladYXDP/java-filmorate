@@ -10,7 +10,7 @@ public class ReviewDtoMapper {
         Review post = new Review();
         post.setReviewId(dto.getReviewId());
         post.setContent(dto.getContent());
-        post.setPositive(dto.isPositive());
+        post.setPositive(dto.getIsPositive());
         post.setFilmId(dto.getFilmId());
         post.setUserId(dto.getUserId());
         post.setUseful(dto.getUseful());
@@ -21,7 +21,7 @@ public class ReviewDtoMapper {
         ReviewDto dto = new ReviewDto();
         dto.setReviewId(post.getReviewId());
         dto.setContent(post.getContent());
-        dto.setPositive(post.isPositive());
+        dto.setIsPositive(post.isPositive());
         dto.setFilmId(post.getFilmId());
         dto.setUserId(post.getUserId());
         dto.setUseful(post.getUseful());

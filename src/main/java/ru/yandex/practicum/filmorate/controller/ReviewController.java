@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.review.ReviewDto;
 import ru.yandex.practicum.filmorate.dto.review.ReviewDtoMapper;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
@@ -24,12 +25,15 @@ public class ReviewController {
 
     @PostMapping
     public ReviewDto create(@Valid @RequestBody ReviewDto dto) {
+        if (dto.getUserId() < 0 || dto.getFilmId() < 0) {
+            throw new ValidationException("Неправильный id пользователя " + dto.getUserId());
+        }
         log.info("Запрос на создание отзыва о фильме" + dto.getFilmId() + " пользователем " + dto.getUserId());
         return reviewDtoMapper.reviewToDto(reviewService.create(reviewDtoMapper.dtoToReview(dto)));
     }
 
     @PutMapping
-    public ReviewDto update(@Positive @RequestBody ReviewDto dto) {
+    public ReviewDto update(@Valid @RequestBody ReviewDto dto) {
         log.info("Редактирования отзыва " + dto.getReviewId());
         Review review = reviewService.update(reviewDtoMapper.dtoToReview(dto));
         return reviewDtoMapper.reviewToDto(review);

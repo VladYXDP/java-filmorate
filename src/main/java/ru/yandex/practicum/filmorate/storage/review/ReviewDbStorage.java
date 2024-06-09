@@ -26,22 +26,22 @@ public class ReviewDbStorage implements ReviewStorage {
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
 
-    private static final String INSERT_REVIEW = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) VALUES (?,?,?,?,?)";
+    private static final String INSERT_REVIEW = "INSERT INTO reviews (content, is_positive, user_id, film_id) VALUES (?,?,?,?)";
     private static final String SELECT_REVIEW = "SELECT * FROM reviews WHERE id = ?";
-    private static final String SELECT_EXISTS_REVIEW = "SELECT EXISTS(SELECT 1 FROM REVIEW WHERE id = ?)";
+    private static final String SELECT_EXISTS_REVIEW = "SELECT EXISTS(SELECT 1 FROM reviews WHERE id = ?)";
     private static final String UPDATE_REVIEW = "UPDATE reviews SET content = ?, is_positive = ?, useful = ?";
     private static final String DELETE_REVIEW = "DELETE FROM reviews WHERE id = ?";
-    private static final String INSERT_LIKE = "INSERT INTO likes_review (user_id, review_id) VALUES (?,?)";
-    private static final String INSERT_DISLIKE = "INSERT INTO dislikes_review (user_id, review_id) VALUES (?,?)";
-    private static final String DELETE_LIKE = "DELETE FROM likes_review WHERE id = ? AND user_id = ?";
-    private static final String DELETE_DISLIKE = "DELETE FROM dislikes_review WHERE id = ? AND user_id = ?";
-    private static final String SELECT_EXISTS_LIKE = "SELECT EXISTS(SELECT 1 FROM likes_review WHERE user_id = ? AND review_id = ?)";
-    private static final String SELECT_EXISTS_DISLIKE = "SELECT EXISTS(SELECT 1 FROM dislikes_review WHERE user_id = ? AND review_id = ?)";
-    private static final String DELETE_LIKES_REVIEW = "DELETE FROM likes_review WHERE id = ?";
-    private static final String DELETE_DISLIKES_REVIEW = "DELETE FROM dislikes_review WHERE id = ?";
-    private static final String SELECT_EXISTS_LIKES_BY_ID = "SELECT EXISTS(SELECT 1 FROM likes_review WHERE id = ?";
-    private static final String SELECT_EXISTS_DISLIKES_BY_ID = "SELECT EXISTS(SELECT 1 FROM dislikes_review WHERE id = ?)";
-    private static final String SELECT_ALL_REVIEWS = "SELECT * FROM reviews AS r GROUP BY film_id = ? ORDER BY DESC useful LIMIT ?";
+    private static final String INSERT_LIKE = "INSERT INTO likes_reviews (user_id, review_id) VALUES (?,?)";
+    private static final String INSERT_DISLIKE = "INSERT INTO dislikes_reviews (user_id, review_id) VALUES (?,?)";
+    private static final String DELETE_LIKE = "DELETE FROM likes_reviews WHERE review_id = ? AND user_id = ?";
+    private static final String DELETE_DISLIKE = "DELETE FROM dislikes_reviews WHERE review_id = ? AND user_id = ?";
+    private static final String SELECT_EXISTS_LIKE = "SELECT EXISTS(SELECT 1 FROM likes_reviews WHERE user_id = ? AND review_id = ?)";
+    private static final String SELECT_EXISTS_DISLIKE = "SELECT EXISTS(SELECT 1 FROM dislikes_reviews WHERE user_id = ? AND review_id = ?)";
+    private static final String DELETE_LIKES_REVIEW = "DELETE FROM likes_reviews WHERE review_id = ?";
+    private static final String DELETE_DISLIKES_REVIEW = "DELETE FROM dislikes_reviews WHERE review_id = ?";
+    private static final String SELECT_EXISTS_LIKES_BY_ID = "SELECT EXISTS(SELECT 1 FROM likes_reviews WHERE review_id = ?)";
+    private static final String SELECT_EXISTS_DISLIKES_BY_ID = "SELECT EXISTS(SELECT 1 FROM dislikes_reviews WHERE review_id = ?)";
+    private static final String SELECT_ALL_REVIEWS = "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
 
 
     @Override
@@ -54,7 +54,7 @@ public class ReviewDbStorage implements ReviewStorage {
             stmt.setBoolean(2, review.isPositive());
             stmt.setLong(3, review.getUserId());
             stmt.setLong(4, review.getFilmId());
-            stmt.setLong(5, review.getUseful());
+//            stmt.setLong(5, review.getUseful());
             return stmt;
         }, keyHolder);
         review.setReviewId(Objects.requireNonNull(keyHolder.getKey()).longValue());
@@ -140,6 +140,7 @@ public class ReviewDbStorage implements ReviewStorage {
                 });
                 if (checkLike(id, userId)) {
                     deleteLike(id, userId);
+                    changeUseful(id, -1);
                 } else {
                     changeUseful(id, -1);
                 }
@@ -156,7 +157,7 @@ public class ReviewDbStorage implements ReviewStorage {
         if (checkReview(id)) {
             if (checkLike(id, userId)) {
                 userStorage.get(userId);
-                jdbcTemplate.update(DELETE_LIKE, userId, id);
+                jdbcTemplate.update(DELETE_LIKE, id, userId);
                 changeUseful(id, -1);
             } else {
                 throw new ReviewLikeNotFoundException("Ошибка удаления лайка у отзыва " + id + " пользователем " + userId);
