@@ -17,6 +17,9 @@ public class Feed {
     private OperationEnum operation;
     private Long entityId;
 
+    public Feed() {
+    }
+
     public Feed(Long userId, EventTypeEnum eventType, OperationEnum operation, Long entityId) {
         this.userId = userId;
         this.eventType = eventType;
