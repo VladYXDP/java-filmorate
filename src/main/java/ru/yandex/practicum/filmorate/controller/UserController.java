@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.feed.FeedDto;
+import ru.yandex.practicum.filmorate.dto.feed.FeedDtoTransfer;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.dto.user.UserDtoMapper;
 import ru.yandex.practicum.filmorate.model.User;
@@ -11,6 +13,7 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -21,6 +24,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserDtoMapper userDtoTransfer;
+    private final FeedDtoTransfer feedDtoTransfer;
 
     @PostMapping
     public UserDto addUser(@Valid @RequestBody UserDto userDto) {
@@ -49,6 +53,15 @@ public class UserController {
     public UserDto getUser(@Positive(message = "id пользователя должен быть больше 0") @PathVariable long id) {
         log.info(String.format("Получение пользователя с %d с id", id));
         return userDtoTransfer.userToDto(userService.getUserById(id));
+    }
+
+    @GetMapping("/{id}/feed")
+    public Set<FeedDto> getFeed(@Positive @PathVariable Long userId) {
+        log.info("Получить ленту событий пользователя " + userId);
+        return userService.getFeed(userId)
+                .stream()
+                .map(feedDtoTransfer::feedToDto)
+                .collect(Collectors.toSet());
     }
 
     @PutMapping("/{id}/friends/{friendId}")
