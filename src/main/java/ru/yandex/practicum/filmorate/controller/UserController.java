@@ -56,9 +56,9 @@ public class UserController {
     }
 
     @GetMapping("/{id}/feed")
-    public Set<FeedDto> getFeed(@Positive @PathVariable Long userId) {
-        log.info("Получить ленту событий пользователя " + userId);
-        return userService.getFeed(userId)
+    public Set<FeedDto> getFeed(@Positive @PathVariable Long id) {
+        log.info("Получить ленту событий пользователя " + id);
+        return userService.getFeed(id)
                 .stream()
                 .map(feedDtoTransfer::feedToDto)
                 .collect(Collectors.toSet());

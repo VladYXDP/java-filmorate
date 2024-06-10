@@ -9,9 +9,13 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
+import ru.yandex.practicum.filmorate.model.enums.OperationEnum;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -31,6 +35,7 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final GenreStorage genreStorage;
     private final RatingStorage ratingStorage;
+    private final FeedStorage feedStorage;
     @Autowired
     @Qualifier("userDbStorage")
     private UserStorage userStorage;
@@ -169,6 +174,7 @@ public class FilmDbStorage implements FilmStorage {
                 stmt.setLong(2, filmId);
                 return stmt;
             });
+            feedStorage.create(new Feed(userId, EventTypeEnum.LIKE, OperationEnum.ADD, filmId));
         }
     }
 
@@ -176,6 +182,7 @@ public class FilmDbStorage implements FilmStorage {
     public void deleteLike(long userId, long filmId) {
         if (checkLike(userId, filmId)) {
             jdbcTemplate.update(DELETE_LIKE, userId, filmId);
+            feedStorage.create(new Feed(userId, EventTypeEnum.LIKE, OperationEnum.REMOVE, filmId));
         }
     }
 
