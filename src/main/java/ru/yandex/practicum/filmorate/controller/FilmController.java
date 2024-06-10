@@ -7,9 +7,11 @@ import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.FilmDtoMapper;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,4 +80,10 @@ public class FilmController {
                 .map(filmDtoTransfer::filmToDto)
                 .collect(Collectors.toList());
     }
+
+    @GetMapping("/common/{userId}/{friendId}")
+    public List<Film> getCommonFilms(@Positive @PathVariable long userId,@Positive @PathVariable long friendId) {
+        return filmService.getCommonFilms(userId,friendId);
+    }
+
 }

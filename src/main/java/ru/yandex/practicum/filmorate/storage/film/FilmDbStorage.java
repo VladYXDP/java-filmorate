@@ -159,6 +159,12 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        String sqlQuery = "SELECT * FROM  films WHERE user_id=? and friend_id=?";
+        return jdbcTemplate.query(sqlQuery, this::getRowMapperFilm, userId,friendId);
+    }
+
+    @Override
     public void addLike(long userId, long filmId) {
         if (!checkLike(userId, filmId)) {
             userStorage.get(userId);
