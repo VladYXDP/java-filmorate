@@ -10,7 +10,7 @@ public class FeedDtoTransfer {
 
     public FeedDto feedToDto (Feed feed) {
         FeedDto dto = new FeedDto();
-        dto.setTimestamp(feed.getTimestamp().atZone(ZoneId.systemDefault()).toEpochSecond());
+        dto.setTimestamp(feed.getTimestamp().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
         dto.setUserId(feed.getUserId());
         dto.setEventType(feed.getEventType().name());
         dto.setOperation(feed.getOperation().name());

@@ -168,12 +168,14 @@ public class FilmDbStorage implements FilmStorage {
         if (!checkLike(userId, filmId)) {
             userStorage.get(userId);
             get(filmId);
+            KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
                 PreparedStatement stmt = connection.prepareStatement(INSERT_LIKE, new String[]{"id"});
                 stmt.setLong(1, userId);
                 stmt.setLong(2, filmId);
                 return stmt;
-            });
+            }, keyHolder);
+            long id = keyHolder.getKey().longValue();
             feedStorage.create(new Feed(userId, EventTypeEnum.LIKE, OperationEnum.ADD, filmId));
         }
     }

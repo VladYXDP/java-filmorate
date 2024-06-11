@@ -20,7 +20,7 @@ public class FeedDbStorage implements FeedStorage {
     private final JdbcTemplate jdbcTemplate;
 
     private static final String INSERT_FEED = "INSERT INTO feeds (timestamp, user_id, event_type, operation, entity_id) VALUES (?,?,?,?,?)";
-    private static final String SELECT_FEED = "SELECT * FROM feeds WHERE user_id = ?";
+    private static final String SELECT_FEED = "SELECT * FROM feeds WHERE user_id = ? ORDER BY timestamp ASC";
 
     @Override
     public void create(Feed feed) {

@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -56,12 +55,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}/feed")
-    public Set<FeedDto> getFeed(@Positive @PathVariable Long id) {
+    public List<FeedDto> getFeed(@Positive @PathVariable Long id) {
         log.info("Получить ленту событий пользователя " + id);
         return userService.getFeed(id)
                 .stream()
                 .map(feedDtoTransfer::feedToDto)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
     @PutMapping("/{id}/friends/{friendId}")

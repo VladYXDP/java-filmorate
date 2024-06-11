@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
 import ru.yandex.practicum.filmorate.model.Feed;
@@ -82,8 +80,8 @@ public class UserService {
         return friend;
     }
 
-    public Set<Feed> getFeed(long userId) {
-        return new HashSet<>(feedStorage.get(userId));
+    public List<Feed> getFeed(long userId) {
+        return feedStorage.get(userId);
     }
 
     public List<User> getAllUsers() {
