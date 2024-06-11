@@ -6,7 +6,11 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.review.*;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
+import ru.yandex.practicum.filmorate.model.enums.OperationEnum;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -25,6 +29,7 @@ public class ReviewDbStorage implements ReviewStorage {
     private final JdbcTemplate jdbcTemplate;
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final FeedStorage feedStorage;
 
     private static final String INSERT_REVIEW = "INSERT INTO reviews (content, is_positive, user_id, film_id) VALUES (?,?,?,?)";
     private static final String SELECT_REVIEW = "SELECT * FROM reviews WHERE id = ?";
@@ -54,10 +59,10 @@ public class ReviewDbStorage implements ReviewStorage {
             stmt.setBoolean(2, review.isPositive());
             stmt.setLong(3, review.getUserId());
             stmt.setLong(4, review.getFilmId());
-//            stmt.setLong(5, review.getUseful());
             return stmt;
         }, keyHolder);
         review.setReviewId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+        feedStorage.create(new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.ADD, review.getReviewId()));
         return review;
     }
 
@@ -65,6 +70,7 @@ public class ReviewDbStorage implements ReviewStorage {
     public Review update(Review review) {
         if (checkReview(review.getReviewId())) {
             jdbcTemplate.update(UPDATE_REVIEW, review.getContent(), review.isPositive(), review.getUseful());
+            feedStorage.create(new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.UPDATE, review.getReviewId()));
             return review;
         } else {
             throw new ReviewNotFoundException("Ошибка обновления отзыва " + review.getReviewId());
@@ -80,7 +86,9 @@ public class ReviewDbStorage implements ReviewStorage {
             if (checkDislike(id)) {
                 jdbcTemplate.update(DELETE_DISLIKES_REVIEW, id);
             }
+            Review review = get(id);
             jdbcTemplate.update(DELETE_REVIEW, id);
+            feedStorage.create(new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.REMOVE, review.getReviewId()));
         } else {
             throw new ReviewNotFoundException("Ошибка удаления отзыва " + id);
         }

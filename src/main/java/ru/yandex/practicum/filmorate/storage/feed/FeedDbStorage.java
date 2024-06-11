@@ -43,6 +43,7 @@ public class FeedDbStorage implements FeedStorage {
     private Feed getRowMapperFeed(ResultSet resultSet, int rowNum) throws SQLException {
         Feed feed = new Feed();
         feed.setEventId(resultSet.getLong("id"));
+        feed.setUserId(resultSet.getLong("user_id"));
         feed.setTimestamp(resultSet.getTimestamp("timestamp").toLocalDateTime());
         feed.setEventType(EventTypeEnum.valueOf(resultSet.getString("event_type")));
         feed.setOperation(OperationEnum.valueOf(resultSet.getString("operation")));

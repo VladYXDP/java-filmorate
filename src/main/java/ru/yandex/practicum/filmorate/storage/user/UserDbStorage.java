@@ -122,7 +122,7 @@ public class UserDbStorage implements UserStorage {
                     stmt.setLong(2, friendId);
                     return stmt;
                 });
-                feedStorage.create(new Feed(userId, EventTypeEnum.FRIEND, OperationEnum.REMOVE, friendId));
+                feedStorage.create(new Feed(userId, EventTypeEnum.FRIEND, OperationEnum.ADD, friendId));
             } else {
                 throw new RuntimeException("Заявка пользователя с id " + userId + " в друзья к пользователю с id "
                         + friendId + "уже существует!");
