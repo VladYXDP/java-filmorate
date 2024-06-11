@@ -81,6 +81,7 @@ public class FilmController {
                 .collect(Collectors.toList());
     }
 
+    //GET /films/common?userId={userId}&friendId={friendId}
     @GetMapping("/common")
     public List<Film> getCommonsFilms(
             @RequestParam(value = "userId") Long userId,
@@ -88,5 +89,4 @@ public class FilmController {
     ) {
         return filmService.getCommonFilms(userId, friendId);
     }
-
 }
