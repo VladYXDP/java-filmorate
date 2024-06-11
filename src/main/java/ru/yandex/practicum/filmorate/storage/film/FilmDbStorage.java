@@ -161,7 +161,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getCommonFilms(Long userId, Long friendId) {
 
-        String sqlQuery = " SELECT f.ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION" +
+        String sqlQuery = " SELECT f.ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.LIKES_COUNT" +
                 " FROM films AS f " +
                 "JOIN LIKES AS l ON f.ID = l.FILM_ID " +
                 "JOIN LIKES AS lf ON l.FILM_ID = lf.FILM_ID " +
