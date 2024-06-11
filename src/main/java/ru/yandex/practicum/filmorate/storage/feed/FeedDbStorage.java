@@ -19,18 +19,18 @@ public class FeedDbStorage implements FeedStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private static final String INSERT_FEED = "INSERT INTO feeds (user_id, timestamp, event_type, operation, entity_id) VALUES (?,?,?,?,?)";
+    private static final String INSERT_FEED = "INSERT INTO feeds (timestamp, user_id, event_type, operation, entity_id) VALUES (?,?,?,?,?)";
     private static final String SELECT_FEED = "SELECT * FROM feeds WHERE user_id = ?";
 
     @Override
     public void create(Feed feed) {
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(INSERT_FEED, new String[]{"id"});
-            stmt.setLong(1, feed.getUserId());
-            stmt.setTimestamp(2, Timestamp.valueOf(feed.getTimestamp()));
+            stmt.setTimestamp(1, Timestamp.valueOf(feed.getTimestamp()));
+            stmt.setLong(2, feed.getUserId());
             stmt.setString(3, feed.getEventType().name());
             stmt.setString(4, feed.getOperation().name());
-            stmt.setLong(5, feed.getEventId());
+            stmt.setLong(5, feed.getEntityId());
             return stmt;
         });
     }
