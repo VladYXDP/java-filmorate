@@ -79,8 +79,11 @@ public class FilmController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/common/{userId}/{friendId}")
-    public List<Film> getCommonFilms(@Positive @PathVariable Long userId,@Positive @PathVariable Long friendId) {
-        return filmService.getCommonFilms(userId,friendId);
+    @GetMapping("/common")
+    public List<Film> getCommonsFilms(
+            @RequestParam(value = "userId") Long userId,
+            @RequestParam(value = "friendId") Long friendId
+    ) {
+        return filmService.getCommonFilms(userId, friendId);
     }
 }
