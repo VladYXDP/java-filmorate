@@ -141,7 +141,7 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
-    private boolean checkUserById(long id) {
+    public boolean checkUserById(long id) {
         return jdbcTemplate.queryForObject(SELECT_EXISTS_USER_BY_ID, Boolean.class, id);
     }
 
