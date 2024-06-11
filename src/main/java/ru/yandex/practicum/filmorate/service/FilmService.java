@@ -62,4 +62,8 @@ public class FilmService {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        return    filmStorage.getDirectorFilms(directorId, sortBy);
+    }
 }
