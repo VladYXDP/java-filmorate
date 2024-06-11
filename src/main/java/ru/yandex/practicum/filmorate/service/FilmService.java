@@ -63,7 +63,7 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    public List<Film> getCommonFilms(long userId, long friendId) {
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId,friendId);
     }
 }

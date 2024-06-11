@@ -159,9 +159,16 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getCommonFilms(long userId, long friendId) {
-        String sqlQuery = "SELECT * FROM  films WHERE user_id=? and friend_id=?";
-        return jdbcTemplate.query(sqlQuery, this::getRowMapperFilm, userId,friendId);
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        String sqlQuery = " SELECT f.ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION," +
+                "f.MPA_ID, rat.NAME AS mpa_name" +
+                " FROM films AS f " +
+                "JOIN RATINGS AS rat ON rat.ID = f.RATING_MPA_ID " +
+                "JOIN LIKE_FILMS AS l ON f.ID = l.FILM_ID " +
+                "JOIN LIKE_FILMS AS lf ON l.FILM_ID = lf.FILM_ID " +
+                "WHERE l.USER_ID = ? and lf.USER_ID = ?";
+
+        return jdbcTemplate.query(sqlQuery, this::getRowMapperFilm, userId, friendId);
     }
 
     @Override
