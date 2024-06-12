@@ -49,6 +49,13 @@ public class FilmDbStorage implements FilmStorage {
     private static final String SELECT_EXISTS_FILM = "SELECT EXISTS(SELECT 1 FROM FILMS WHERE id = ?)";
     private static final String SELECT_EXISTS_LIKE = "SELECT EXISTS(SELECT 1 FROM LIKES WHERE user_id = ? AND film_id = ?)";
     private static final String SELECT_EXISTS_FILMS_GENRES = "SELECT EXISTS(SELECT 1 FROM films_genres WHERE films_id = ? AND genres_id = ?)";
+    private static final String SELECT_COMMONS = """
+            SELECT f.ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION, f.RATING_ID
+            FROM films AS f
+            JOIN LIKES AS l ON f.ID = l.FILM_ID
+            JOIN LIKES AS lf ON l.FILM_ID = lf.FILM_ID
+            WHERE l.USER_ID = ? and lf.USER_ID = ?
+            """;
 
     @Override
     public Film add(Film film) {
@@ -160,14 +167,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getCommonFilms(Long userId, Long friendId) {
-
-        String sqlQuery = " SELECT f.ID, f.NAME, f.DESCRIPTION, f.RELEASE_DATE, f.DURATION" +
-                " FROM films AS f " +
-                "JOIN MPA AS rat ON rat.ID = f.MPA_ID " +
-                "JOIN LIKES AS l ON f.ID = l.FILM_ID " +
-                "JOIN LIKES AS lf ON l.FILM_ID = lf.FILM_ID " +
-                "WHERE l.USER_ID = ? and lf.USER_ID = ?";
-        return jdbcTemplate.query(sqlQuery, this::getRowMapperFilm, userId, friendId);
+        List<Film> films = jdbcTemplate.query(SELECT_COMMONS, this::getRowMapperFilm, userId, friendId);
+        films.forEach(film -> {
+            if (film.getRatingId() != null) {
+                film.setMpa(ratingStorage.getRatingById(film.getRatingId()));
+            }
+            film.setGenres(genreStorage.getGenresByFilmId(film.getId()));
+        });
+        return films;
     }
 
     @Override
