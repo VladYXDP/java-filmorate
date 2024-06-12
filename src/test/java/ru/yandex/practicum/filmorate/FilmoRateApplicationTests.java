@@ -1,12 +1,13 @@
 package ru.yandex.practicum.filmorate;
 
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
@@ -14,21 +15,21 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@JdbcTest
+
+@SpringBootTest
 @AutoConfigureTestDatabase
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
-@ContextConfiguration(classes = {UserDbStorage.class, FilmDbStorage.class, GenreStorage.class, RatingStorage.class})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class FilmoRateApplicationTests {
 
-    private final UserDbStorage userStorage;
-    private final FilmDbStorage filmStorage;
+    @Autowired
+    private UserDbStorage userStorage;
+    @Autowired
+    private FilmDbStorage filmStorage;
 
     @Test
     public void findUserByIdTest() {
