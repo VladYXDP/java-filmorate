@@ -18,7 +18,10 @@ import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 
 import java.util.Map;
 
-@RestControllerAdvice(assignableTypes = {UserController.class, FilmController.class, RatingController.class, GenreController.class})
+@RestControllerAdvice(assignableTypes = {UserController.class,
+        FilmController.class,
+        RatingController.class,
+        GenreController.class})
 public class ErrorHandler {
 
     @ExceptionHandler

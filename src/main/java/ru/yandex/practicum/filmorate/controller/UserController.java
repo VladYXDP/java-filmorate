@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.feed.FeedDto;
+import ru.yandex.practicum.filmorate.dto.feed.FeedDtoTransfer;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.dto.user.UserDtoMapper;
 import ru.yandex.practicum.filmorate.model.User;
@@ -21,6 +23,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserDtoMapper userDtoTransfer;
+    private final FeedDtoTransfer feedDtoTransfer;
 
     @PostMapping
     public UserDto addUser(@Valid @RequestBody UserDto userDto) {
@@ -49,6 +52,15 @@ public class UserController {
     public UserDto getUser(@Positive(message = "id пользователя должен быть больше 0") @PathVariable long id) {
         log.info(String.format("Получение пользователя с %d с id", id));
         return userDtoTransfer.userToDto(userService.getUserById(id));
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<FeedDto> getFeed(@Positive @PathVariable Long id) {
+        log.info("Получить ленту событий пользователя " + id);
+        return userService.getFeed(id)
+                .stream()
+                .map(feedDtoTransfer::feedToDto)
+                .collect(Collectors.toList());
     }
 
     @PutMapping("/{id}/friends/{friendId}")
