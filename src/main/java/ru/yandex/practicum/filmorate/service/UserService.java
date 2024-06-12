@@ -1,10 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.ArrayList;
@@ -13,11 +14,11 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    @Qualifier("userDbStorage")
-    private UserStorage userStorage;
+    private final UserStorage userStorage;
+    private final FeedStorage feedStorage;
 
     public User addUser(User user) {
         if (user != null) {
@@ -77,6 +78,10 @@ public class UserService {
         List<User> friend = new ArrayList<>();
         getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(it)));
         return friend;
+    }
+
+    public List<Feed> getFeed(long userId) {
+        return feedStorage.get(userId);
     }
 
     public List<User> getAllUsers() {

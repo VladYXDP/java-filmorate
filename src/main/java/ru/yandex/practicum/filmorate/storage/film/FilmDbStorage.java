@@ -21,12 +21,16 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.exception.film.SortException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
+import ru.yandex.practicum.filmorate.model.enums.OperationEnum;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -40,6 +44,7 @@ public class FilmDbStorage implements FilmStorage {
     private final RatingStorage ratingStorage;
     private final DirectorDbStorage directorStorage;
     private final UserStorage userStorage;
+    private final FeedStorage feedStorage;
 
     private static final String INSERT_FILM_WITH_MPA = "INSERT INTO FILMS (name, description, release_date, duration, rating_id) VALUES (?,?,?,?,?)";
     private static final String INSERT_FILM_WITH_MPA_AND_DIRECTOR =
@@ -189,18 +194,20 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
-
     @Override
     public void addLike(long userId, long filmId) {
         if (!checkLike(userId, filmId)) {
             userStorage.get(userId);
             get(filmId);
+            KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
                 PreparedStatement stmt = connection.prepareStatement(INSERT_LIKE, new String[]{"id"});
                 stmt.setLong(1, userId);
                 stmt.setLong(2, filmId);
                 return stmt;
-            });
+            }, keyHolder);
+            long id = keyHolder.getKey().longValue();
+            feedStorage.create(new Feed(userId, EventTypeEnum.LIKE, OperationEnum.ADD, filmId));
         }
     }
 
@@ -208,6 +215,7 @@ public class FilmDbStorage implements FilmStorage {
     public void deleteLike(long userId, long filmId) {
         if (checkLike(userId, filmId)) {
             jdbcTemplate.update(DELETE_LIKE, userId, filmId);
+            feedStorage.create(new Feed(userId, EventTypeEnum.LIKE, OperationEnum.REMOVE, filmId));
         }
     }
 
