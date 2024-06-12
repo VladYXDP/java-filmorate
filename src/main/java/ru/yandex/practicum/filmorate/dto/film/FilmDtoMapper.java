@@ -1,9 +1,12 @@
 package ru.yandex.practicum.filmorate.dto.film;
 
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDtoMapper;
 import ru.yandex.practicum.filmorate.dto.rating.RatingDtoMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 
 @Component
@@ -26,6 +29,11 @@ public class FilmDtoMapper {
         if (!dto.getGenres().isEmpty()) {
             film.setGenres(genreDtoMapper.dtoToGenre(dto.getGenres()));
         }
+        if (!dto.getDirectors().isEmpty()) {
+            film.getDirectors().addAll(dto.getDirectors().stream()
+                    .map(directorDto -> new Director(directorDto.getId(), directorDto.getName())).collect(
+                            Collectors.toList()));
+        }
         return film;
     }
 
@@ -45,6 +53,11 @@ public class FilmDtoMapper {
             }
             if (film.getLikesCount() != null) {
                 dto.setLikeCount(film.getLikesCount());
+            }
+            if (!film.getDirectors().isEmpty()) {
+                dto.getDirectors().addAll(film.getDirectors().stream()
+                        .map(director -> new DirectorDto(director.getId(), director.getName())).collect(
+                                Collectors.toList()));
             }
             return dto;
         }
