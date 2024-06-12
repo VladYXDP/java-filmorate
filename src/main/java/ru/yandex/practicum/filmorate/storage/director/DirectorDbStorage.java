@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DirectorDbStorage {
 
-    private final static String TABLE_NAME = "directors";
+    private static final String TABLE_NAME = "directors";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -25,8 +25,8 @@ public class DirectorDbStorage {
                 .withTableName(TABLE_NAME)
                 .usingGeneratedKeyColumns("id");
 
-        Long DirectorId = simpleJdbcInsert.executeAndReturnKey(director.toMap()).longValue();
-        return getDirector(DirectorId);
+        long directorId = simpleJdbcInsert.executeAndReturnKey(director.toMap()).longValue();
+        return getDirector(directorId);
     }
 
     public Director getDirector(long directorId) {

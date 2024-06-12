@@ -21,4 +21,6 @@ public interface FilmStorage {
     List<Film> getAllFilms();
 
     List<Film> getDirectorFilms(long directorId, String sortBy);
+
+    List<Film> searchFilms(String query, boolean byTitle, boolean byDirector);
 }

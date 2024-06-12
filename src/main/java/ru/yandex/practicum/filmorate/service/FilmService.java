@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.exception.film.FilmIsNullException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -66,5 +65,12 @@ public class FilmService {
 
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
         return    filmStorage.getDirectorFilms(directorId, sortBy);
+    }
+
+    public List<Film> searchFilms(String query, List<String> by) {
+        boolean byTitle = by.contains("title");
+        boolean byDirector = by.contains("director");
+
+        return filmStorage.searchFilms(query, byTitle, byDirector);
     }
 }

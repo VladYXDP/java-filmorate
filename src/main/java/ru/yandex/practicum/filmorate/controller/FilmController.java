@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -93,6 +94,19 @@ public class FilmController {
         List<FilmDto> films = filmService.getDirectorFilms(directorId, sortBy).stream().map(filmDtoTransfer::filmToDto)
                 .collect(Collectors.toList());
         log.debug("Фильмы получены {}", films);
+        return films;
+    }
+
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam String query, @RequestParam String by) {
+        String[] byArray = by.split(",");
+        List<String> byList = Arrays.asList(byArray);
+        log.info("Поступил запрос на получение фильмов по запросу: {}", byList);
+        List<FilmDto> films = filmService.searchFilms(query, byList)
+                .stream()
+                .map(filmDtoTransfer::filmToDto)
+                .collect(Collectors.toList());
+        log.info("Фильмы найдены {}", films);
         return films;
     }
 }

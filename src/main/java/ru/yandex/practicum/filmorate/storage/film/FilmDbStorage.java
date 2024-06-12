@@ -5,11 +5,14 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -211,21 +214,21 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
         String sql = "SELECT f.id as film_id, "
-                + "f.name as name, "
-                + "f.description as description, "
-                + "f.release_date as release_date, "
-                + "f.duration as duration, "
-                + "d.id AS director_id, "
-                + "d.name AS director_name, "
-                + "r.id AS rating_id, "
-                + "r.name AS rating_name, "
-                + "array_agg(l.USER_ID) AS likes "
-                + "FROM films f "
-                + "JOIN directors d ON d.id = f.director_id "
-                + "JOIN ratings r ON r.id = f.rating_id "
-                + "LEFT JOIN likes l ON l.film_id = f.id "
-                + "WHERE f.director_id = ? "
-                + "GROUP BY f.id, f.name, f.description, f.release_date, f.duration, d.id, d.name, r.id, r.name ";
+                     + "f.name as name, "
+                     + "f.description as description, "
+                     + "f.release_date as release_date, "
+                     + "f.duration as duration, "
+                     + "d.id AS director_id, "
+                     + "d.name AS director_name, "
+                     + "r.id AS rating_id, "
+                     + "r.name AS rating_name, "
+                     + "array_agg(l.USER_ID) AS likes "
+                     + "FROM films f "
+                     + "JOIN directors d ON d.id = f.director_id "
+                     + "JOIN ratings r ON r.id = f.rating_id "
+                     + "LEFT JOIN likes l ON l.film_id = f.id "
+                     + "WHERE f.director_id = ? "
+                     + "GROUP BY f.id, f.name, f.description, f.release_date, f.duration, d.id, d.name, r.id, r.name ";
         switch (sortBy) {
             case "year": {
                 sql = sql + "ORDER BY extract(year from f.release_date);";
@@ -286,6 +289,61 @@ public class FilmDbStorage implements FilmStorage {
                 film.getId());
 
         return get(film.getId());
+    }
+
+    @Override
+    public List<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
+        final String SEARCH_BY_TITLE = """
+                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                FROM films f
+                WHERE LOWER(f.name) LIKE LOWER(?)
+                """;
+
+        final String SEARCH_BY_DIRECTOR = """
+                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                FROM films f
+                JOIN directors d ON f.director_id = d.id
+                WHERE LOWER(d.name) LIKE LOWER(?)
+                """;
+
+        final String SEARCH_BY_BOTH = """
+                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                FROM films f
+                LEFT JOIN directors d ON f.director_id = d.id
+                WHERE LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)
+                """;
+
+        String searchQuery = "%" + query.toLowerCase() + "%";
+        List<Film> films;
+
+        if (byTitle && byDirector) {
+            films = jdbcTemplate.query(SEARCH_BY_BOTH, this::getRowMapperFilm, searchQuery, searchQuery);
+        } else if (byTitle) {
+            films = jdbcTemplate.query(SEARCH_BY_TITLE, this::getRowMapperFilm, searchQuery);
+        } else if (byDirector) {
+            films = jdbcTemplate.query(SEARCH_BY_DIRECTOR, this::getRowMapperFilm, searchQuery);
+        } else {
+            films = new ArrayList<>();
+        }
+
+
+        films.forEach(it -> {
+            if (it.getRatingId() > 0) {
+                Rating rating = ratingStorage.getRatingById(it.getRatingId());
+                it.setRatingId(rating.getId());
+                it.setMpa(rating);
+            }
+            List<Genre> genres = genreStorage.getGenresByFilmId(it.getId());
+            it.setGenres(genres);
+            it.setLikesCount(getLikes(it.getId()));
+            try {
+                it.setDirectors(List.of(directorStorage.getDirectorByFilmId(it.getId())));
+            } catch (DirectorNotFoundException e) {
+                it.setDirectors(Collections.emptyList());
+            }
+        });
+        films.sort((a, b) -> Long.compare(b.getLikesCount(), a.getLikesCount()));
+        return films;
     }
 
     private long getLikes(long filmId) {
