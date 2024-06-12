@@ -8,7 +8,7 @@ import java.time.ZoneId;
 @Component
 public class FeedDtoTransfer {
 
-    public FeedDto feedToDto (Feed feed) {
+    public FeedDto feedToDto(Feed feed) {
         FeedDto dto = new FeedDto();
         dto.setTimestamp(feed.getTimestamp().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
         dto.setUserId(feed.getUserId());
