@@ -109,4 +109,9 @@ public class FilmController {
         log.info("Фильмы найдены {}", films);
         return films;
     }
+
+    @DeleteMapping("/{filmId}")
+    public void deleteFilmById(@PathVariable Long filmId) {
+        filmService.deleteFilmById(filmId);
+    }
 }

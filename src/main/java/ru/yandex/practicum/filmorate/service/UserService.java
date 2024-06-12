@@ -9,8 +9,10 @@ import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -19,6 +21,7 @@ public class UserService {
 
     private final UserStorage userStorage;
     private final FeedStorage feedStorage;
+    private final Map<Long, List<User>> deletedUserFriendsCache = new HashMap<>();
 
     public User addUser(User user) {
         if (user != null) {
@@ -76,8 +79,12 @@ public class UserService {
 
     public List<User> getUserFriends(long userId) {
         List<User> friend = new ArrayList<>();
-        getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(it)));
-        return friend;
+        if (!deletedUserFriendsCache.containsKey(userId)) {
+            getUserById(userId).getFriends().forEach(it -> friend.add(getUserById(it)));
+            return friend;
+        } else {
+            return deletedUserFriendsCache.get(userId);
+        }
     }
 
     public List<Feed> getFeed(long userId) {
@@ -86,5 +93,10 @@ public class UserService {
 
     public List<User> getAllUsers() {
         return userStorage.getAllUser();
+    }
+
+    public void deleteUserByID(Long userId) {
+        deletedUserFriendsCache.put(userId, getUserFriends(userId));
+        userStorage.deleteUserByID(userId);
     }
 }

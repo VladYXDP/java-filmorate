@@ -65,7 +65,7 @@ public class UserDbStorage implements UserStorage {
             return user;
         }
         throw new UserAlreadyExistException("Пользователь с email " + user.getEmail() + " и login " + user.getLogin() +
-                " уже существует");
+                                            " уже существует");
     }
 
     @Override
@@ -111,6 +111,13 @@ public class UserDbStorage implements UserStorage {
         return jdbcTemplate.query(SELECT_ALL_USERS, this::getRowMapperUser);
     }
 
+    @Override
+    public void deleteUserByID(Long userId) {
+        if (checkUserById(userId)) {
+            jdbcTemplate.update(DELETE_USER, userId);
+        }
+    }
+
     public void addFriend(long userId, long friendId) {
         if (checkUserById(userId) && checkUserById(friendId)) {
             boolean user = checkFriendsById(userId, friendId);
@@ -124,7 +131,7 @@ public class UserDbStorage implements UserStorage {
                 feedStorage.create(new Feed(userId, EventTypeEnum.FRIEND, OperationEnum.ADD, friendId));
             } else {
                 throw new RuntimeException("Заявка пользователя с id " + userId + " в друзья к пользователю с id "
-                        + friendId + "уже существует!");
+                                           + friendId + "уже существует!");
             }
         } else {
             throw new UserNotFoundException("Для добавления в друзья пользователи не найдены!");

@@ -95,4 +95,10 @@ public class UserController {
                 .map(userDtoTransfer::userToDto)
                 .collect(Collectors.toList());
     }
+
+    @DeleteMapping("/{userId}")
+    public void deleteUserByID(@PathVariable Long userId) {
+        userService.deleteUserByID(userId);
+        log.info("Удален пользователь с id = {}", userId);
+    }
 }
