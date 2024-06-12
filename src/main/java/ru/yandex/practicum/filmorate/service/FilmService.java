@@ -62,4 +62,15 @@ public class FilmService {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        return    filmStorage.getDirectorFilms(directorId, sortBy);
+    }
+
+    public List<Film> searchFilms(String query, List<String> by) {
+        boolean byTitle = by.contains("title");
+        boolean byDirector = by.contains("director");
+
+        return filmStorage.searchFilms(query, byTitle, byDirector);
+    }
 }

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dto.film;
 
 import lombok.Data;
+import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
 import ru.yandex.practicum.filmorate.dto.rating.RatingDto;
 import ru.yandex.practicum.filmorate.validate.annotation.ReleaseValidation;
@@ -30,4 +31,5 @@ public class FilmDto {
     private Long likeCount;
     private RatingDto mpa;
     private List<GenreDto> genres = new ArrayList<>();
+    private List<DirectorDto> directors = new ArrayList<>();
 }

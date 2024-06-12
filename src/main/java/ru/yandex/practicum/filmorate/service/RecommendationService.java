@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
@@ -11,17 +11,11 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class RecommendationService {
     private final RecommendDbStorage recommendDbStorage;
     private final SlopeOneRecommender slopeOneRecommender;
     private final FilmDbStorage filmDbStorage;
-
-    @Autowired
-    public RecommendationService(RecommendDbStorage recommendDbStorage, SlopeOneRecommender slopeOneRecommender, FilmDbStorage filmDbStorage) {
-        this.recommendDbStorage = recommendDbStorage;
-        this.slopeOneRecommender = slopeOneRecommender;
-        this.filmDbStorage = filmDbStorage;
-    }
 
     public List<Film> recommendFilms(Long userId) {
         Map<Long, Map<Long, Integer>> data = recommendDbStorage.getUserLikes();

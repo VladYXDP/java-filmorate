@@ -1,27 +1,35 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Rating;
-import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-
+import java.sql.Array;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
+import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
+import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.film.SortException;
+import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 @Component(value = "filmDbStorage")
 @RequiredArgsConstructor
@@ -30,16 +38,19 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final GenreStorage genreStorage;
     private final RatingStorage ratingStorage;
-    @Autowired
-    @Qualifier("userDbStorage")
-    private UserStorage userStorage;
+    private final DirectorDbStorage directorStorage;
+    private final UserStorage userStorage;
 
     private static final String INSERT_FILM_WITH_MPA = "INSERT INTO FILMS (name, description, release_date, duration, rating_id) VALUES (?,?,?,?,?)";
+    private static final String INSERT_FILM_WITH_MPA_AND_DIRECTOR =
+            "INSERT INTO FILMS (name, description, release_date, duration, rating_id, director_id) VALUES (?,?,?,?,?,?)";
     private static final String INSERT_FILM_WITHOUT_MPA = "INSERT INTO FILMS (name, description, release_date, duration) VALUES (?,?,?,?)";
+    private static final String INSERT_FILM_WITHOUT_MPA_AND_WITH_DIRECTOR = "INSERT INTO FILMS (name, description, release_date, duration, director_id) VALUES (?,?,?,?,?)";
     private static final String INSERT_FILMS_GENRES = "INSERT INTO films_genres (films_id, genres_id) VALUES (?,?)";
     private static final String DELETE_FILM = "DELETE FROM FILMS WHERE id = ?";
     private static final String DELETE_FILMS_GENRES = "DELETE FROM FILMS_GENRES WHERE films_id = ?";
     private static final String UPDATE_FILM = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ? WHERE id = ?";
+    private static final String UPDATE_FILM_WITH_DIRECTOR = "UPDATE FILMS SET name = ?, description = ?, release_date = ?, duration = ?, director_id = ? WHERE id = ?";
     private static final String SELECT_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
     private static final String SELECT_FILMS = "SELECT * FROM films";
     private static final String INSERT_LIKE = "INSERT INTO likes (user_id, film_id) VALUES(?,?)";
@@ -52,15 +63,21 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film add(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
+        boolean withoutDirector = film.getDirectors().isEmpty();
         if (film.getMpa() != null) {
             if (ratingStorage.checkRating(film.getMpa().getId())) {
                 jdbcTemplate.update(connection -> {
-                    PreparedStatement stmt = connection.prepareStatement(INSERT_FILM_WITH_MPA, new String[]{"id"});
+                    PreparedStatement stmt = connection.prepareStatement(
+                            withoutDirector ? INSERT_FILM_WITH_MPA : INSERT_FILM_WITH_MPA_AND_DIRECTOR,
+                            new String[]{"id"});
                     stmt.setString(1, film.getName());
                     stmt.setString(2, film.getDescription());
                     stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
                     stmt.setLong(4, film.getDuration());
                     stmt.setLong(5, film.getMpa().getId());
+                    if (!withoutDirector) {
+                        stmt.setLong(6, film.getDirectors().get(0).getId());
+                    }
                     return stmt;
                 }, keyHolder);
                 Rating mpa = ratingStorage.getRatingById(film.getMpa().getId());
@@ -70,11 +87,16 @@ public class FilmDbStorage implements FilmStorage {
             }
         } else {
             jdbcTemplate.update(connection -> {
-                PreparedStatement stmt = connection.prepareStatement(INSERT_FILM_WITHOUT_MPA, new String[]{"id"});
+                PreparedStatement stmt = connection.prepareStatement(
+                        withoutDirector ? INSERT_FILM_WITHOUT_MPA : INSERT_FILM_WITHOUT_MPA_AND_WITH_DIRECTOR,
+                        new String[]{"id"});
                 stmt.setString(1, film.getName());
                 stmt.setString(2, film.getDescription());
                 stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
                 stmt.setLong(4, film.getDuration());
+                if (!withoutDirector) {
+                    stmt.setLong(5, film.getDirectors().get(0).getId());
+                }
                 return stmt;
             }, keyHolder);
         }
@@ -84,7 +106,8 @@ public class FilmDbStorage implements FilmStorage {
                 film.getGenres().forEach(it -> {
                     if (!checkFilmGenre(film.getId(), it.getId())) {
                         jdbcTemplate.update(connection -> {
-                            PreparedStatement stmt = connection.prepareStatement(INSERT_FILMS_GENRES, new String[]{"id"});
+                            PreparedStatement stmt = connection.prepareStatement(INSERT_FILMS_GENRES,
+                                    new String[]{"id"});
                             stmt.setLong(1, film.getId());
                             stmt.setLong(2, it.getId());
                             return stmt;
@@ -97,7 +120,7 @@ public class FilmDbStorage implements FilmStorage {
                 throw new FilmCreateException("Какого-то жанра не существует!");
             }
         }
-        return film;
+        return get(film.getId());
     }
 
     @Override
@@ -114,7 +137,11 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         if (checkFilm(film.getId())) {
-            jdbcTemplate.update(UPDATE_FILM, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), film.getId());
+            if (!film.getDirectors().isEmpty()) {
+                return updateFilmWithDirector(film);
+            }
+            jdbcTemplate.update(UPDATE_FILM, film.getName(), film.getDescription(), film.getReleaseDate(),
+                    film.getDuration(), film.getId());
             return film;
         } else {
             throw new FilmNotFoundException("Ошибка обновления фильма " + film.getName() + "!");
@@ -133,6 +160,11 @@ public class FilmDbStorage implements FilmStorage {
                 film.setRatingId(null);
             }
             List<Genre> genres = genreStorage.getGenresByFilmId(filmId);
+            try {
+                film.setDirectors(List.of(directorStorage.getDirectorByFilmId(filmId)));
+            } catch (DirectorNotFoundException e) {
+                film.setDirectors(List.of());
+            }
             film.setLikesCount(getLikes(filmId));
             film.setGenres(genres);
             return film;
@@ -157,6 +189,7 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
+
     @Override
     public void addLike(long userId, long filmId) {
         if (!checkLike(userId, filmId)) {
@@ -176,6 +209,141 @@ public class FilmDbStorage implements FilmStorage {
         if (checkLike(userId, filmId)) {
             jdbcTemplate.update(DELETE_LIKE, userId, filmId);
         }
+    }
+
+    @Override
+    public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        String sql = "SELECT f.id as film_id, "
+                     + "f.name as name, "
+                     + "f.description as description, "
+                     + "f.release_date as release_date, "
+                     + "f.duration as duration, "
+                     + "d.id AS director_id, "
+                     + "d.name AS director_name, "
+                     + "r.id AS rating_id, "
+                     + "r.name AS rating_name, "
+                     + "array_agg(l.USER_ID) AS likes "
+                     + "FROM films f "
+                     + "JOIN directors d ON d.id = f.director_id "
+                     + "JOIN ratings r ON r.id = f.rating_id "
+                     + "LEFT JOIN likes l ON l.film_id = f.id "
+                     + "WHERE f.director_id = ? "
+                     + "GROUP BY f.id, f.name, f.description, f.release_date, f.duration, d.id, d.name, r.id, r.name ";
+        switch (sortBy) {
+            case "year": {
+                sql = sql + "ORDER BY extract(year from f.release_date);";
+                return getListFilmWithDirector(sql, directorId);
+            }
+            case "likes": {
+                sql = sql + "ORDER BY count(l.USER_ID) DESC;";
+                return getListFilmWithDirector(sql, directorId);
+            }
+            default:
+                throw new SortException();
+        }
+    }
+
+    private List<Film> getListFilmWithDirector(String sql, long directorId) {
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Film film = Film.builder()
+                    .id(rs.getLong("film_id"))
+                    .name(rs.getString("name"))
+                    .description(rs.getString("description"))
+                    .releaseDate(rs.getDate("release_date").toLocalDate())
+                    .duration(rs.getLong("duration"))
+                    .build();
+
+            Optional.of(film)
+                    .ifPresent(f -> {
+                        try {
+                            Rating mpa = new Rating(rs.getLong("rating_id"),
+                                    rs.getString("rating_name"));
+
+                            Director director = new Director(rs.getInt("director_id"),
+                                    rs.getString("director_name"));
+
+                            Array likesArray = rs.getArray("likes");
+                            Set<Long> likes = new HashSet<>();
+                            if (likesArray != null) {
+                                ResultSet likesResultSet = likesArray.getResultSet();
+                                while (likesResultSet.next()) {
+                                    likes.add(likesResultSet.getLong("VALUE"));
+                                }
+                            }
+                            f.setMpa(mpa);
+                            f.setGenres(genreStorage.getGenresByFilmId(f.getId()));
+                            f.setLikes(likes);
+                            f.getDirectors().add(director);
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+            return film;
+
+        }, directorId);
+    }
+
+    private Film updateFilmWithDirector(Film film) {
+        jdbcTemplate.update(UPDATE_FILM_WITH_DIRECTOR, film.getName(), film.getDescription(),
+                film.getReleaseDate(), film.getDuration(), film.getDirectors().get(0).getId(),
+                film.getId());
+
+        return get(film.getId());
+    }
+
+    @Override
+    public List<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
+        final String SEARCH_BY_TITLE = """
+                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                FROM films f
+                WHERE LOWER(f.name) LIKE LOWER(?)
+                """;
+
+        final String SEARCH_BY_DIRECTOR = """
+                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                FROM films f
+                JOIN directors d ON f.director_id = d.id
+                WHERE LOWER(d.name) LIKE LOWER(?)
+                """;
+
+        final String SEARCH_BY_BOTH = """
+                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                FROM films f
+                LEFT JOIN directors d ON f.director_id = d.id
+                WHERE LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)
+                """;
+
+        String searchQuery = "%" + query.toLowerCase() + "%";
+        List<Film> films;
+
+        if (byTitle && byDirector) {
+            films = jdbcTemplate.query(SEARCH_BY_BOTH, this::getRowMapperFilm, searchQuery, searchQuery);
+        } else if (byTitle) {
+            films = jdbcTemplate.query(SEARCH_BY_TITLE, this::getRowMapperFilm, searchQuery);
+        } else if (byDirector) {
+            films = jdbcTemplate.query(SEARCH_BY_DIRECTOR, this::getRowMapperFilm, searchQuery);
+        } else {
+            films = new ArrayList<>();
+        }
+
+
+        films.forEach(it -> {
+            if (it.getRatingId() > 0) {
+                Rating rating = ratingStorage.getRatingById(it.getRatingId());
+                it.setRatingId(rating.getId());
+                it.setMpa(rating);
+            }
+            List<Genre> genres = genreStorage.getGenresByFilmId(it.getId());
+            it.setGenres(genres);
+            it.setLikesCount(getLikes(it.getId()));
+            try {
+                it.setDirectors(List.of(directorStorage.getDirectorByFilmId(it.getId())));
+            } catch (DirectorNotFoundException e) {
+                it.setDirectors(Collections.emptyList());
+            }
+        });
+        films.sort((a, b) -> Long.compare(b.getLikesCount(), a.getLikesCount()));
+        return films;
     }
 
     private long getLikes(long filmId) {
@@ -202,6 +370,7 @@ public class FilmDbStorage implements FilmStorage {
         film.setReleaseDate(resultSet.getDate("release_date").toLocalDate());
         film.setDuration(resultSet.getLong("duration"));
         film.setRatingId(resultSet.getLong("rating_id"));
+
         return film;
     }
 }
