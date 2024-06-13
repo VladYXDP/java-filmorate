@@ -373,6 +373,16 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
+    @Override
+    public void deleteFilmById(Long filmId) {
+        if (checkFilm(filmId)) {
+            String deleteFilm = "DELETE FROM films WHERE id = ?";
+            jdbcTemplate.update(deleteFilm, filmId);
+        } else {
+            throw new FilmNotFoundException("Фильма с id = " + filmId + " нет");
+        }
+    }
+
     private long getLikes(long filmId) {
         return jdbcTemplate.queryForObject(SELECT_LIKES, Long.class, filmId);
     }
