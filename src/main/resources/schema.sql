@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS films
     release_date DATE        NOT NULL,
     duration     BIGINT        NOT NULL,
     rating_id    BIGINT REFERENCES ratings (id),
-    director_id  BIGINT REFERENCES DIRECTORS (id) on update cascade
+    director_id  BIGINT REFERENCES DIRECTORS (id) ON DELETE SET NULL ON UPDATE CASCADE
     );
 
 CREATE TABLE IF NOT EXISTS users

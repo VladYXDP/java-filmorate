@@ -24,7 +24,7 @@ public class DirectorController {
     private final DirectorService directorService;
 
     @PostMapping
-    public DirectorDto addDirector(@RequestBody final DirectorDto directorDto) {
+    public DirectorDto addDirector(@RequestBody @Valid final DirectorDto directorDto) {
         log.info("Поступил запрос на добавление режиссера {}", directorDto.getName());
         DirectorDto createdDirector = directorService.addDirector(directorDto);
         log.debug("Режиссер добавлен {}", createdDirector);

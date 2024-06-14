@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -13,7 +12,6 @@ import javax.validation.constraints.NotNull;
 public class DirectorDto {
 
     private final int id;
-    @NotNull
-    @NotBlank
+    @NotBlank(message = "Имя не должно быть пустым")
     private final String name;
 }
