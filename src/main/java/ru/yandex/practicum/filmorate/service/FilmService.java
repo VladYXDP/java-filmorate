@@ -8,9 +8,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
@@ -56,15 +54,12 @@ public class FilmService {
         return filmStorage.get(id);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        return getAllFilms().stream()
-                .sorted(Comparator.comparing(Film::getLikesCount).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+    public List<Film> getPopularFilms(int count, Integer genreId, Integer year) {
+        return filmStorage.getPopularFilms(count, genreId, year);
     }
 
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
-        return    filmStorage.getDirectorFilms(directorId, sortBy);
+        return filmStorage.getDirectorFilms(directorId, sortBy);
     }
 
     public List<Film> searchFilms(String query, List<String> by) {
@@ -75,10 +70,6 @@ public class FilmService {
     }
 
     public List<Film> getCommonFilms(Long userId, Long friendId) {
-        return filmStorage.getCommonFilms(userId,friendId);
-    }
-
-    public void deleteFilmById(Long filmId) {
-        filmStorage.deleteFilmById(filmId);
+        return filmStorage.getCommonFilms(userId, friendId);
     }
 }
