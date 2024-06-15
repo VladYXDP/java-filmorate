@@ -1,10 +1,10 @@
 package ru.yandex.practicum.filmorate.storage.review;
 
+import java.util.Set;
 import ru.yandex.practicum.filmorate.model.Review;
 
-import java.util.Set;
-
 public interface ReviewStorage {
+
     Review create(Review review);
 
     Review update(Review review);
