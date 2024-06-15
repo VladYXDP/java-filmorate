@@ -13,7 +13,7 @@ public interface ReviewStorage {
 
     Review get(long id);
 
-    Set<Review> getAllById(long filmId, long count);
+    Set<Review> getAll(Long filmId, Long count);
 
     void like(long id, long userId);
 

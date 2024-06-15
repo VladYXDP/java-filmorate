@@ -33,6 +33,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private static final String INSERT_REVIEW = "INSERT INTO reviews (content, is_positive, user_id, film_id) VALUES (?,?,?,?)";
     private static final String SELECT_REVIEW = "SELECT * FROM reviews WHERE id = ?";
+    private static final String SELECT_ALL_REVIEWS = "SELECT * FROM reviews";
     private static final String SELECT_EXISTS_REVIEW = "SELECT EXISTS(SELECT 1 FROM reviews WHERE id = ?)";
     private static final String UPDATE_REVIEW = "UPDATE reviews SET content = ?, is_positive = ?, useful = ?";
     private static final String DELETE_REVIEW = "DELETE FROM reviews WHERE id = ?";
@@ -46,7 +47,7 @@ public class ReviewDbStorage implements ReviewStorage {
     private static final String DELETE_DISLIKES_REVIEW = "DELETE FROM dislikes_reviews WHERE review_id = ?";
     private static final String SELECT_EXISTS_LIKES_BY_ID = "SELECT EXISTS(SELECT 1 FROM likes_reviews WHERE review_id = ?)";
     private static final String SELECT_EXISTS_DISLIKES_BY_ID = "SELECT EXISTS(SELECT 1 FROM dislikes_reviews WHERE review_id = ?)";
-    private static final String SELECT_ALL_REVIEWS = "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
+    private static final String SELECT_ALL_REVIEWS_BY_ID = "SELECT * FROM reviews WHERE film_id = ? ORDER BY useful DESC LIMIT ?";
 
 
     @Override
@@ -104,9 +105,14 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Set<Review> getAllById(long filmId, long count) {
-        filmStorage.get(filmId);
-        List<Review> reviews = jdbcTemplate.query(SELECT_ALL_REVIEWS, this::getRowMapperReview, filmId, count);
+    public Set<Review> getAll(Long filmId, Long count) {
+        List<Review> reviews;
+        if (filmId == null) {
+            reviews = jdbcTemplate.query(SELECT_ALL_REVIEWS, this::getRowMapperReview);
+        } else {
+            filmStorage.get(filmId);
+            reviews = jdbcTemplate.query(SELECT_ALL_REVIEWS_BY_ID, this::getRowMapperReview, filmId, count);
+        }
         return new HashSet<>(reviews);
     }
 

@@ -52,10 +52,10 @@ public class ReviewController {
     }
 
     @GetMapping
-    public Set<ReviewDto> getAllById(@Positive @RequestParam("filmId") Long filmId,
-                                     @RequestParam(value = "count", defaultValue = "10") Long count) {
+    public Set<ReviewDto> getAll(@RequestParam(value = "filmId", required = false) Long filmId,
+                                     @RequestParam(value = "count", defaultValue = "10", required = false) Long count) {
         log.info("Получить список отзывов фильма " + filmId);
-        return reviewService.getAllById(filmId, count)
+        return reviewService.getAll(filmId, count)
                 .stream()
                 .map(reviewDtoMapper::reviewToDto)
                 .collect(Collectors.toSet());
