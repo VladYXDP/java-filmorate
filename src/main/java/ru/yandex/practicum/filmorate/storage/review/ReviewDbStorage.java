@@ -1,19 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.review;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.review.*;
-import ru.yandex.practicum.filmorate.model.Feed;
-import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
-import ru.yandex.practicum.filmorate.model.enums.OperationEnum;
-import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,6 +7,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.review.ReviewDislikeAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.review.ReviewDislikeNotFoundException;
+import ru.yandex.practicum.filmorate.exception.review.ReviewLikeAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.review.ReviewLikeNotFoundException;
+import ru.yandex.practicum.filmorate.exception.review.ReviewNotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
+import ru.yandex.practicum.filmorate.model.enums.OperationEnum;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 @Component
 @RequiredArgsConstructor
@@ -70,7 +73,8 @@ public class ReviewDbStorage implements ReviewStorage {
     public Review update(Review review) {
         if (checkReview(review.getReviewId())) {
             jdbcTemplate.update(UPDATE_REVIEW, review.getContent(), review.isPositive(), review.getUseful());
-            feedStorage.create(new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.UPDATE, review.getReviewId()));
+            feedStorage.create(
+                    new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.UPDATE, review.getReviewId()));
             return review;
         } else {
             throw new ReviewNotFoundException("Ошибка обновления отзыва " + review.getReviewId());
@@ -88,7 +92,8 @@ public class ReviewDbStorage implements ReviewStorage {
             }
             Review review = get(id);
             jdbcTemplate.update(DELETE_REVIEW, id);
-            feedStorage.create(new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.REMOVE, review.getReviewId()));
+            feedStorage.create(
+                    new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.REMOVE, review.getReviewId()));
         } else {
             throw new ReviewNotFoundException("Ошибка удаления отзыва " + id);
         }
@@ -128,7 +133,8 @@ public class ReviewDbStorage implements ReviewStorage {
                     changeUseful(id, 1);
                 }
             } else {
-                throw new ReviewLikeAlreadyExistsException("Ошибка добавление лайка к отзыву " + id + " пользователем " + userId);
+                throw new ReviewLikeAlreadyExistsException(
+                        "Ошибка добавление лайка к отзыву " + id + " пользователем " + userId);
             }
         } else {
             throw new ReviewNotFoundException("Ошибка добавления лайка к отзыву " + id + " пользователем " + userId);
@@ -153,7 +159,8 @@ public class ReviewDbStorage implements ReviewStorage {
                     changeUseful(id, -1);
                 }
             } else {
-                throw new ReviewDislikeAlreadyExistsException("Ошибка добавление дизлайка для отзыва " + id + " пользователем " + userId);
+                throw new ReviewDislikeAlreadyExistsException(
+                        "Ошибка добавление дизлайка для отзыва " + id + " пользователем " + userId);
             }
         } else {
             throw new ReviewNotFoundException("Ошибка добавления дизлайка к отзыву " + id + " пользователем " + userId);
@@ -168,7 +175,8 @@ public class ReviewDbStorage implements ReviewStorage {
                 jdbcTemplate.update(DELETE_LIKE, id, userId);
                 changeUseful(id, -1);
             } else {
-                throw new ReviewLikeNotFoundException("Ошибка удаления лайка у отзыва " + id + " пользователем " + userId);
+                throw new ReviewLikeNotFoundException(
+                        "Ошибка удаления лайка у отзыва " + id + " пользователем " + userId);
             }
         } else {
             throw new ReviewNotFoundException("Ошибка удаления лайка к отзыву " + id + " пользователем " + userId);
@@ -182,7 +190,8 @@ public class ReviewDbStorage implements ReviewStorage {
                 userStorage.get(userId);
                 jdbcTemplate.update(DELETE_DISLIKE, userId, id);
             } else {
-                throw new ReviewDislikeNotFoundException("Ошибка удаления дизлайка у отзыва " + id + " пользователем " + userId);
+                throw new ReviewDislikeNotFoundException(
+                        "Ошибка удаления дизлайка у отзыва " + id + " пользователем " + userId);
             }
         } else {
             throw new ReviewNotFoundException("Ошибка удаления дизлайка к отзыву " + id + " пользователем " + userId);

@@ -1,14 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.film.FilmIsNullException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-
-import java.util.List;
 
 @Service
 public class FilmService {
@@ -19,6 +19,8 @@ public class FilmService {
     @Autowired
     @Qualifier("userDbStorage")
     private UserStorage userStorage;
+    @Autowired
+    private DirectorDbStorage directorStorage;
 
     public Film addFilm(Film film) {
         if (film != null) {
@@ -31,8 +33,7 @@ public class FilmService {
 
     public Film updateFilm(Film film) {
         if (film != null) {
-            filmStorage.update(film);
-            return film;
+            return filmStorage.update(film);
         } else {
             throw new FilmIsNullException("Ошибка обновления фильма!");
         }
@@ -59,6 +60,7 @@ public class FilmService {
     }
 
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        directorStorage.getDirector(directorId);
         return filmStorage.getDirectorFilms(directorId, sortBy);
     }
 

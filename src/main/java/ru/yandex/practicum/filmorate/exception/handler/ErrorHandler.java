@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.exception.handler;
 
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -9,14 +10,13 @@ import ru.yandex.practicum.filmorate.controller.GenreController;
 import ru.yandex.practicum.filmorate.controller.RatingController;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmAlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.exception.rating.RatingNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
-
-import java.util.Map;
 
 @RestControllerAdvice(assignableTypes = {UserController.class,
         FilmController.class,
@@ -45,6 +45,12 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleGenreNotFoundException(final GenreNotFoundException e) {
+        return Map.of("error", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleDirectorNotFoundException(final DirectorNotFoundException e) {
         return Map.of("error", e.getMessage());
     }
 
