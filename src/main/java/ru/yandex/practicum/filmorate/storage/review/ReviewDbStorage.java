@@ -1,22 +1,11 @@
 package ru.yandex.practicum.filmorate.storage.review;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.review.ReviewDislikeAlreadyExistsException;
-import ru.yandex.practicum.filmorate.exception.review.ReviewDislikeNotFoundException;
-import ru.yandex.practicum.filmorate.exception.review.ReviewLikeAlreadyExistsException;
-import ru.yandex.practicum.filmorate.exception.review.ReviewLikeNotFoundException;
-import ru.yandex.practicum.filmorate.exception.review.ReviewNotFoundException;
+import ru.yandex.practicum.filmorate.exception.review.*;
 import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
@@ -24,6 +13,12 @@ import ru.yandex.practicum.filmorate.model.enums.OperationEnum;
 import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -36,7 +31,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private static final String INSERT_REVIEW = "INSERT INTO reviews (content, is_positive, user_id, film_id) VALUES (?,?,?,?)";
     private static final String SELECT_REVIEW = "SELECT * FROM reviews WHERE id = ?";
-    private static final String SELECT_ALL_REVIEWS = "SELECT * FROM reviews";
+    private static final String SELECT_ALL_REVIEWS = "SELECT * FROM reviews ORDER BY useful DESC LIMIT ?";
     private static final String SELECT_EXISTS_REVIEW = "SELECT EXISTS(SELECT 1 FROM reviews WHERE id = ?)";
     private static final String UPDATE_REVIEW = "UPDATE reviews SET content = ?, is_positive = ?, useful = ?";
     private static final String DELETE_REVIEW = "DELETE FROM reviews WHERE id = ?";
@@ -67,19 +62,15 @@ public class ReviewDbStorage implements ReviewStorage {
         }, keyHolder);
         review.setReviewId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         feedStorage.create(new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.ADD, review.getReviewId()));
-        return review;
+        return get(review.getReviewId());
     }
 
     @Override
     public Review update(Review review) {
-        if (checkReview(review.getReviewId())) {
-            jdbcTemplate.update(UPDATE_REVIEW, review.getContent(), review.isPositive(), review.getUseful());
-            feedStorage.create(
-                    new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.UPDATE, review.getReviewId()));
-            return review;
-        } else {
-            throw new ReviewNotFoundException("Ошибка обновления отзыва " + review.getReviewId());
-        }
+        get(review.getReviewId());
+        jdbcTemplate.update(UPDATE_REVIEW, review.getContent(), review.isPositive(), review.getUseful());
+        feedStorage.create(new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.UPDATE, review.getReviewId()));
+        return get(review.getReviewId());
     }
 
     @Override
@@ -110,15 +101,15 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Set<Review> getAll(Long filmId, Long count) {
+    public List<Review> getAll(Long filmId, Long count) {
         List<Review> reviews;
         if (filmId == null) {
-            reviews = jdbcTemplate.query(SELECT_ALL_REVIEWS, this::getRowMapperReview);
+            reviews = jdbcTemplate.query(SELECT_ALL_REVIEWS, this::getRowMapperReview, count);
         } else {
             filmStorage.get(filmId);
             reviews = jdbcTemplate.query(SELECT_ALL_REVIEWS_BY_ID, this::getRowMapperReview, filmId, count);
         }
-        return new HashSet<>(reviews);
+        return reviews;
     }
 
     @Override

@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,13 +53,13 @@ public class ReviewController {
     }
 
     @GetMapping
-    public Set<ReviewDto> getAll(@RequestParam(value = "filmId", required = false) Long filmId,
-                                     @RequestParam(value = "count", defaultValue = "10", required = false) Long count) {
+    public List<ReviewDto> getAll(@RequestParam(value = "filmId", required = false) Long filmId,
+                                  @RequestParam(value = "count", defaultValue = "10", required = false) Long count) {
         log.info("Получить список отзывов фильма " + filmId);
         return reviewService.getAll(filmId, count)
                 .stream()
                 .map(reviewDtoMapper::reviewToDto)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
     @PutMapping("/{id}/like/{userId}")
