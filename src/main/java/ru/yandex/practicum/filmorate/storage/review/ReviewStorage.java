@@ -10,6 +10,8 @@ public interface ReviewStorage {
 
     Review update(Review review);
 
+    void updateUseful(Review review);
+
     void delete(long id);
 
     Review get(long id);

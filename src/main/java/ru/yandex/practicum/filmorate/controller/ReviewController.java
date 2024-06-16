@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -59,6 +60,7 @@ public class ReviewController {
         return reviewService.getAll(filmId, count)
                 .stream()
                 .map(reviewDtoMapper::reviewToDto)
+                .sorted(Comparator.comparing(ReviewDto::getUseful).reversed())
                 .collect(Collectors.toList());
     }
 
