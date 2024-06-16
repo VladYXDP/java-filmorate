@@ -34,7 +34,7 @@ public class ReviewDbStorage implements ReviewStorage {
     private static final String SELECT_ALL_REVIEWS = "SELECT * FROM reviews LIMIT ?";
     private static final String SELECT_EXISTS_REVIEW = "SELECT EXISTS(SELECT 1 FROM reviews WHERE id = ?)";
     private static final String UPDATE_REVIEW = "UPDATE reviews SET content = ?, is_positive = ?";
-    private static final String UPDATE_USEFUL = "UPDATE reviews SET useful = ? WHERE id = ? AND user_id = ?";
+    private static final String UPDATE_USEFUL = "UPDATE reviews SET useful = ? WHERE id = ?";
     private static final String DELETE_REVIEW = "DELETE FROM reviews WHERE id = ?";
     private static final String INSERT_LIKE = "INSERT INTO likes_reviews (user_id, review_id) VALUES (?,?)";
     private static final String INSERT_DISLIKE = "INSERT INTO dislikes_reviews (user_id, review_id) VALUES (?,?)";
@@ -70,13 +70,14 @@ public class ReviewDbStorage implements ReviewStorage {
     public Review update(Review review) {
         get(review.getReviewId());
         jdbcTemplate.update(UPDATE_REVIEW, review.getContent(), review.isPositive());
-        feedStorage.create(new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.UPDATE, review.getReviewId()));
+        Review reviewNew = get(review.getReviewId());
+        feedStorage.create(new Feed(reviewNew.getUserId(), EventTypeEnum.REVIEW, OperationEnum.UPDATE, reviewNew.getReviewId()));
         return get(review.getReviewId());
     }
 
     @Override
     public void updateUseful(Review review) {
-        jdbcTemplate.update(UPDATE_USEFUL, review.getUseful(), review.getReviewId(), review.getUserId());
+        jdbcTemplate.update(UPDATE_USEFUL, review.getUseful(), review.getReviewId());
     }
 
     @Override

@@ -1,17 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import java.sql.Array;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -24,11 +12,7 @@ import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundExceptio
 import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.SortException;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Feed;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Rating;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
 import ru.yandex.practicum.filmorate.model.enums.OperationEnum;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
@@ -36,6 +20,10 @@ import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+
+import java.sql.Date;
+import java.sql.*;
+import java.util.*;
 
 @Component(value = "filmDbStorage")
 @RequiredArgsConstructor

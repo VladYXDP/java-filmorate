@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.dto.film;
 
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
@@ -8,6 +7,8 @@ import ru.yandex.practicum.filmorate.dto.genre.GenreDtoMapper;
 import ru.yandex.practicum.filmorate.dto.rating.RatingDtoMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
+
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
