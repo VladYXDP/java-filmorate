@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class Feed {
     private Long eventId;
     private LocalDateTime timestamp = LocalDateTime.now();

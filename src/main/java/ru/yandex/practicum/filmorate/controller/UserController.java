@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.dto.feed.FeedDto;
 import ru.yandex.practicum.filmorate.dto.feed.FeedDtoTransfer;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.dto.user.UserDtoMapper;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -26,14 +27,14 @@ public class UserController {
     private final FeedDtoTransfer feedDtoTransfer;
 
     @PostMapping
-    public UserDto addUser(@Valid @RequestBody UserDto userDto) {
+    public UserDto addUser(@Valid @RequestBody final UserDto userDto) {
         User user = userService.addUser(userDtoTransfer.dtoToUser(userDto));
         log.info(String.format("Пользователь %s добавлен!", user.getName()));
         return userDtoTransfer.userToDto(user);
     }
 
     @PutMapping
-    public UserDto updateUser(@Valid @RequestBody UserDto userDto) {
+    public UserDto updateUser(@Valid @RequestBody final UserDto userDto) {
         User user = userService.updateUser(userDtoTransfer.dtoToUser(userDto));
         log.info(String.format("Пользователь %s обновлён!", user.getName()));
         return userDtoTransfer.userToDto(user);
@@ -100,5 +101,10 @@ public class UserController {
     public void deleteUserByID(@PathVariable Long userId) {
         userService.deleteUserByID(userId);
         log.info("Удален пользователь с id = {}", userId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Film> getRecommendations(@PathVariable long id) {
+        return userService.recommendFilms(id);
     }
 }

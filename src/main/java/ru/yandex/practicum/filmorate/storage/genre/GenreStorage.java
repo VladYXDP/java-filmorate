@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.storage.genre;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.ResultSet;
@@ -28,7 +28,7 @@ public class GenreStorage {
     public Genre getGenreById(long id) {
         List<Genre> genre = jdbcTemplate.query(SELECT_GENRES, this::getGenreMapper, id);
         if (genre.size() != 1) {
-            throw new GenreNotFoundException("Жанр с id " + id + " не найден!");
+            throw new NotFoundException("Жанр с id " + id + " не найден!");
         }
         return jdbcTemplate.queryForObject(SELECT_GENRES, this::getGenreMapper, id);
     }

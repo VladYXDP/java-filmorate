@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage.recommendations;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,7 +95,7 @@ public class SlopeOneRecommender {
         return cleanPredictions;
     }
 
-    public List<Film> recommend(Map<Long, Integer> userRatings, FilmDbStorage filmDbStorage) {
+    public List<Film> recommend(Map<Long, Integer> userRatings, FilmStorage filmDbStorage) {
         //Если у пользователя нет оценок, возвращаем пустой список
         if (userRatings == null || userRatings.isEmpty()) {
             return new ArrayList<>();

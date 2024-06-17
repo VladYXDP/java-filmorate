@@ -6,8 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
-import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Friends;
 import ru.yandex.practicum.filmorate.model.User;
@@ -76,7 +76,7 @@ public class UserDbStorage implements UserStorage {
             jdbcTemplate.update(DELETE_USER, user.getId());
             return user;
         }
-        throw new UserNotFoundException("Ошибка удаления пользователя!");
+        throw new NotFoundException("Ошибка удаления пользователя!");
     }
 
     @Override
@@ -85,7 +85,7 @@ public class UserDbStorage implements UserStorage {
             jdbcTemplate.update(UPDATE_USER, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday(), user.getId());
             return user;
         }
-        throw new UserNotFoundException("Ошибка обновления пользователя!");
+        throw new NotFoundException("Ошибка обновления пользователя!");
     }
 
 
@@ -102,7 +102,7 @@ public class UserDbStorage implements UserStorage {
             }
             return user;
         } else {
-            throw new UserNotFoundException("Пользователь с id " + id + " не найден!");
+            throw new NotFoundException("Пользователь с id " + id + " не найден!");
         }
     }
 
@@ -134,7 +134,7 @@ public class UserDbStorage implements UserStorage {
                                            + friendId + "уже существует!");
             }
         } else {
-            throw new UserNotFoundException("Для добавления в друзья пользователи не найдены!");
+            throw new NotFoundException("Для добавления в друзья пользователи не найдены!");
         }
     }
 
@@ -143,7 +143,7 @@ public class UserDbStorage implements UserStorage {
             jdbcTemplate.update(DELETE_BY_USER_AND_FRIEND, userId, friendId);
             feedStorage.create(new Feed(userId, EventTypeEnum.FRIEND, OperationEnum.REMOVE, friendId));
         } else {
-            throw new UserNotFoundException("Для добавления в друзья пользователи не найдены!");
+            throw new NotFoundException("Для добавления в друзья пользователи не найдены!");
         }
     }
 

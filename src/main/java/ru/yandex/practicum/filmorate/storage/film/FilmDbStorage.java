@@ -8,9 +8,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.director.DirectorNotFoundException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmCreateException;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.SortException;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
@@ -46,7 +45,9 @@ public class FilmDbStorage implements FilmStorage {
     private static final String DELETE_FILMS_GENRES = "DELETE FROM FILMS_GENRES WHERE films_id = ?";
     private static final String UPDATE_FILM = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, rating_id = ? WHERE id = ?";
     private static final String UPDATE_FILM_WITH_DIRECTOR = "UPDATE FILMS SET director_id = ? WHERE id = ?";
+    private static final String UPDATE_FILM_WITHOUT_DIRECTOR = "UPDATE films SET director_id = NULL WHERE id = ?";
     private static final String SELECT_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
+    private static final String DELETE_FILM_BY_ID = "DELETE FROM films WHERE id = ?";
     private static final String SELECT_FILMS = "SELECT * FROM films";
     private static final String INSERT_LIKE = "INSERT INTO likes (user_id, film_id) VALUES(?,?)";
     private static final String DELETE_LIKE = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
@@ -60,6 +61,83 @@ public class FilmDbStorage implements FilmStorage {
             JOIN LIKES AS l ON f.ID = l.FILM_ID
             JOIN LIKES AS lf ON l.FILM_ID = lf.FILM_ID
             WHERE l.USER_ID = ? and lf.USER_ID = ?
+            """;
+    private static final String SEARCH_BY_TITLE = """
+            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+            FROM films f
+            WHERE LOWER(f.name) LIKE LOWER(?)
+            """;
+    private static final String SEARCH_BY_DIRECTOR = """
+            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+            FROM films f
+            JOIN directors d ON f.director_id = d.id
+            WHERE LOWER(d.name) LIKE LOWER(?)
+            """;
+    private static final String SEARCH_BY_BOTH = """
+            SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+            FROM films f
+            LEFT JOIN directors d ON f.director_id = d.id
+            WHERE LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)
+            """;
+    private static final String SELECT_POPULAR_FILM = """
+            SELECT f.id as film_id,
+            f.name as name,
+            f.description as description,
+            f.release_date as release_date,
+            f.duration as duration,
+            d.id AS director_id,
+            d.name AS director_name,
+            r.id AS rating_id,
+            r.name AS rating_name,
+            array_agg(l.USER_ID) AS likes
+            FROM films f
+            LEFT JOIN directors d ON d.id = f.director_id
+            JOIN ratings r ON r.id = f.rating_id
+            LEFT JOIN likes l ON l.film_id = f.id
+            LEFT JOIN FILMS_GENRES fg ON fg.films_id = f.id
+            WHERE (:genreId IS NULL OR fg.genres_id = :genreId)
+            AND (:year IS NULL OR extract(year from f.release_date) = :year)
+            GROUP BY f.id, f.name, f.description, f.release_date, f.duration, d.id, d.name, r.id, r.name
+            ORDER BY COUNT(l.USER_ID) DESC
+            LIMIT :count
+            """;
+    private static final String SELECT_DIRECTORS_ORDER_BY_YEAR = """
+            SELECT f.id as film_id,
+            f.name as name,
+            f.description as description,
+            f.release_date as release_date,
+            f.duration as duration,
+            d.id AS director_id,
+            d.name AS director_name,
+            r.id AS rating_id,
+            r.name AS rating_name,
+            array_agg(l.USER_ID) AS likes
+            FROM films f
+            JOIN directors d ON d.id = f.director_id
+            JOIN ratings r ON r.id = f.rating_id
+            LEFT JOIN likes l ON l.film_id = f.id
+            WHERE f.director_id = ?
+            GROUP BY f.id, f.name, f.description, f.release_date, f.duration, d.id, d.name, r.id, r.name
+            ORDER BY extract(year from f.release_date);
+            """;
+    private static final String SELECT_DIRECTORS_ORDER_BY_LIKES = """
+            SELECT f.id as film_id,
+            f.name as name,
+            f.description as description,
+            f.release_date as release_date,
+            f.duration as duration,
+            d.id AS director_id,
+            d.name AS director_name,
+            r.id AS rating_id,
+            r.name AS rating_name,
+            array_agg(l.USER_ID) AS likes
+            FROM films f
+            JOIN directors d ON d.id = f.director_id
+            JOIN ratings r ON r.id = f.rating_id
+            LEFT JOIN likes l ON l.film_id = f.id
+            WHERE f.director_id = ?
+            GROUP BY f.id, f.name, f.description, f.release_date, f.duration, d.id, d.name, r.id, r.name
+            ORDER BY count(l.USER_ID) DESC;
             """;
 
     @Override
@@ -132,7 +210,7 @@ public class FilmDbStorage implements FilmStorage {
             jdbcTemplate.update(DELETE_FILM, film.getId());
             return film;
         } else {
-            throw new FilmNotFoundException("Ошибка удаления фильма " + film.getName() + "!");
+            throw new NotFoundException("Ошибка удаления фильма " + film.getName() + "!");
         }
     }
 
@@ -163,7 +241,7 @@ public class FilmDbStorage implements FilmStorage {
             }
             return get(film.getId());
         } else {
-            throw new FilmNotFoundException("Ошибка обновления фильма " + film.getName() + "!");
+            throw new NotFoundException("Ошибка обновления фильма " + film.getName() + "!");
         }
     }
 
@@ -181,14 +259,14 @@ public class FilmDbStorage implements FilmStorage {
             List<Genre> genres = genreStorage.getGenresByFilmId(filmId);
             try {
                 film.setDirectors(List.of(directorStorage.getDirectorByFilmId(filmId)));
-            } catch (DirectorNotFoundException e) {
+            } catch (NotFoundException e) {
                 film.setDirectors(List.of());
             }
             film.setLikesCount(getLikes(filmId));
             film.setGenres(genres);
             return film;
         } else {
-            throw new FilmNotFoundException("Ошибка получения фильма " + filmId + "!");
+            throw new NotFoundException("Ошибка получения фильма " + filmId + "!");
         }
     }
 
@@ -206,7 +284,7 @@ public class FilmDbStorage implements FilmStorage {
             it.setLikesCount(getLikes(it.getId()));
             try {
                 it.setDirectors(List.of(directorStorage.getDirectorByFilmId(it.getId())));
-            } catch (DirectorNotFoundException e) {
+            } catch (NotFoundException e) {
                 it.setDirectors(List.of());
             }
         });
@@ -234,27 +312,7 @@ public class FilmDbStorage implements FilmStorage {
         params.addValue("genreId", genreId);
         params.addValue("year", year);
 
-        String sql = "SELECT f.id as film_id, "
-                + "f.name as name, "
-                + "f.description as description, "
-                + "f.release_date as release_date, "
-                + "f.duration as duration, "
-                + "d.id AS director_id, "
-                + "d.name AS director_name, "
-                + "r.id AS rating_id, "
-                + "r.name AS rating_name, "
-                + "array_agg(l.USER_ID) AS likes "
-                + "FROM films f "
-                + "LEFT JOIN directors d ON d.id = f.director_id "
-                + "JOIN ratings r ON r.id = f.rating_id "
-                + "LEFT JOIN likes l ON l.film_id = f.id "
-                + "LEFT JOIN FILMS_GENRES fg ON fg.films_id = f.id "
-                + "WHERE (:genreId IS NULL OR fg.genres_id = :genreId) "
-                + "AND (:year IS NULL OR extract(year from f.release_date) = :year) "
-                + "GROUP BY f.id, f.name, f.description, f.release_date, f.duration, d.id, d.name, r.id, r.name "
-                + "ORDER BY COUNT(l.USER_ID) DESC "
-                + "LIMIT :count";
-        return jdbc.query(sql, params, processRowMappingFilm());
+        return jdbc.query(SELECT_POPULAR_FILM, params, processRowMappingFilm());
     }
 
     @Override
@@ -268,7 +326,6 @@ public class FilmDbStorage implements FilmStorage {
             stmt.setLong(2, filmId);
             return stmt;
         }, keyHolder);
-        long id = keyHolder.getKey().longValue();
         feedStorage.create(new Feed(userId, EventTypeEnum.LIKE, OperationEnum.ADD, filmId));
     }
 
@@ -278,40 +335,17 @@ public class FilmDbStorage implements FilmStorage {
             jdbcTemplate.update(DELETE_LIKE, userId, filmId);
             feedStorage.create(new Feed(userId, EventTypeEnum.LIKE, OperationEnum.REMOVE, filmId));
         } else {
-            throw new FilmNotFoundException("Ошибка удаления лайка");
+            throw new NotFoundException("Ошибка удаления лайка");
         }
     }
 
     @Override
     public List<Film> getDirectorFilms(long directorId, String sortBy) {
-        String sql = "SELECT f.id as film_id, "
-                + "f.name as name, "
-                + "f.description as description, "
-                + "f.release_date as release_date, "
-                + "f.duration as duration, "
-                + "d.id AS director_id, "
-                + "d.name AS director_name, "
-                + "r.id AS rating_id, "
-                + "r.name AS rating_name, "
-                + "array_agg(l.USER_ID) AS likes "
-                + "FROM films f "
-                + "JOIN directors d ON d.id = f.director_id "
-                + "JOIN ratings r ON r.id = f.rating_id "
-                + "LEFT JOIN likes l ON l.film_id = f.id "
-                + "WHERE f.director_id = ? "
-                + "GROUP BY f.id, f.name, f.description, f.release_date, f.duration, d.id, d.name, r.id, r.name ";
-        switch (sortBy) {
-            case "year": {
-                sql = sql + "ORDER BY extract(year from f.release_date);";
-                return getListFilmWithDirector(sql, directorId);
-            }
-            case "likes": {
-                sql = sql + "ORDER BY count(l.USER_ID) DESC;";
-                return getListFilmWithDirector(sql, directorId);
-            }
-            default:
-                throw new SortException();
-        }
+        return switch (sortBy) {
+            case "year" -> getListFilmWithDirector(SELECT_DIRECTORS_ORDER_BY_YEAR, directorId);
+            case "likes" -> getListFilmWithDirector(SELECT_DIRECTORS_ORDER_BY_LIKES, directorId);
+            default -> throw new SortException();
+        };
     }
 
     private List<Film> getListFilmWithDirector(String sql, long directorId) {
@@ -335,7 +369,7 @@ public class FilmDbStorage implements FilmStorage {
                                     rs.getString("rating_name"));
 
                             if (rs.getString("director_name") != null
-                                    && rs.getString("director_id") != null) {
+                                && rs.getString("director_id") != null) {
                                 Director director = new Director(rs.getInt("director_id"),
                                         rs.getString("director_name"));
                                 f.getDirectors().add(director);
@@ -368,33 +402,12 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Film updateFilmWithoutDirector(Film film) {
-        String sql = "UPDATE films SET director_id = NULL WHERE id = ?";
-        jdbcTemplate.update(sql, film.getId());
+        jdbcTemplate.update(UPDATE_FILM_WITHOUT_DIRECTOR, film.getId());
         return get(film.getId());
     }
 
     @Override
     public List<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
-        final String SEARCH_BY_TITLE = """
-                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-                FROM films f
-                WHERE LOWER(f.name) LIKE LOWER(?)
-                """;
-
-        final String SEARCH_BY_DIRECTOR = """
-                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-                FROM films f
-                JOIN directors d ON f.director_id = d.id
-                WHERE LOWER(d.name) LIKE LOWER(?)
-                """;
-
-        final String SEARCH_BY_BOTH = """
-                SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
-                FROM films f
-                LEFT JOIN directors d ON f.director_id = d.id
-                WHERE LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)
-                """;
-
         String searchQuery = "%" + query.toLowerCase() + "%";
         List<Film> films;
 
@@ -419,7 +432,7 @@ public class FilmDbStorage implements FilmStorage {
             it.setLikesCount(getLikes(it.getId()));
             try {
                 it.setDirectors(List.of(directorStorage.getDirectorByFilmId(it.getId())));
-            } catch (DirectorNotFoundException e) {
+            } catch (NotFoundException e) {
                 it.setDirectors(Collections.emptyList());
             }
         });
@@ -430,10 +443,9 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void deleteFilmById(Long filmId) {
         if (checkFilm(filmId)) {
-            String deleteFilm = "DELETE FROM films WHERE id = ?";
-            jdbcTemplate.update(deleteFilm, filmId);
+            jdbcTemplate.update(DELETE_FILM_BY_ID, filmId);
         } else {
-            throw new FilmNotFoundException("Фильма с id = " + filmId + " нет");
+            throw new NotFoundException("Фильма с id = " + filmId + " нет");
         }
     }
 

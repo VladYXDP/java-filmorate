@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.review.*;
 import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -94,7 +95,7 @@ public class ReviewDbStorage implements ReviewStorage {
             feedStorage.create(
                     new Feed(review.getUserId(), EventTypeEnum.REVIEW, OperationEnum.REMOVE, review.getReviewId()));
         } else {
-            throw new ReviewNotFoundException("Ошибка удаления отзыва " + id);
+            throw new NotFoundException("Ошибка удаления отзыва " + id);
         }
     }
 
@@ -103,7 +104,7 @@ public class ReviewDbStorage implements ReviewStorage {
         if (checkReview(id)) {
             return jdbcTemplate.queryForObject(SELECT_REVIEW, this::getRowMapperReview, id);
         } else {
-            throw new ReviewNotFoundException("Ошибка получения фильма " + id);
+            throw new NotFoundException("Ошибка получения фильма " + id);
         }
     }
 
@@ -141,7 +142,7 @@ public class ReviewDbStorage implements ReviewStorage {
                         "Ошибка добавление лайка к отзыву " + id + " пользователем " + userId);
             }
         } else {
-            throw new ReviewNotFoundException("Ошибка добавления лайка к отзыву " + id + " пользователем " + userId);
+            throw new NotFoundException("Ошибка добавления лайка к отзыву " + id + " пользователем " + userId);
         }
     }
 
@@ -167,7 +168,7 @@ public class ReviewDbStorage implements ReviewStorage {
                         "Ошибка добавление дизлайка для отзыва " + id + " пользователем " + userId);
             }
         } else {
-            throw new ReviewNotFoundException("Ошибка добавления дизлайка к отзыву " + id + " пользователем " + userId);
+            throw new NotFoundException("Ошибка добавления дизлайка к отзыву " + id + " пользователем " + userId);
         }
     }
 
@@ -179,11 +180,11 @@ public class ReviewDbStorage implements ReviewStorage {
                 jdbcTemplate.update(DELETE_LIKE, id, userId);
                 changeUseful(id, -1);
             } else {
-                throw new ReviewLikeNotFoundException(
+                throw new NotFoundException(
                         "Ошибка удаления лайка у отзыва " + id + " пользователем " + userId);
             }
         } else {
-            throw new ReviewNotFoundException("Ошибка удаления лайка к отзыву " + id + " пользователем " + userId);
+            throw new NotFoundException("Ошибка удаления лайка к отзыву " + id + " пользователем " + userId);
         }
     }
 
@@ -194,11 +195,11 @@ public class ReviewDbStorage implements ReviewStorage {
                 userStorage.get(userId);
                 jdbcTemplate.update(DELETE_DISLIKE, userId, id);
             } else {
-                throw new ReviewDislikeNotFoundException(
+                throw new NotFoundException(
                         "Ошибка удаления дизлайка у отзыва " + id + " пользователем " + userId);
             }
         } else {
-            throw new ReviewNotFoundException("Ошибка удаления дизлайка к отзыву " + id + " пользователем " + userId);
+            throw new NotFoundException("Ошибка удаления дизлайка к отзыву " + id + " пользователем " + userId);
         }
     }
 

@@ -7,8 +7,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.model.User;
@@ -40,8 +39,8 @@ class FilmoRateApplicationTests {
     public void deleteUserTest() {
         User user1 = userStorage.add(createUser1());
         userStorage.delete(user1);
-        UserNotFoundException ex = Assertions.assertThrows(
-                UserNotFoundException.class,
+        NotFoundException ex = Assertions.assertThrows(
+                NotFoundException.class,
                 () -> userStorage.get(user1.getId())
         );
         Assertions.assertEquals(ex.getMessage(), "Пользователь с id " + user1.getId() + " не найден!");
@@ -105,8 +104,8 @@ class FilmoRateApplicationTests {
     public void deleteFilmTest() {
         Film film1 = filmStorage.add(createFilm1());
         filmStorage.delete(film1);
-        FilmNotFoundException ex = Assertions.assertThrows(
-                FilmNotFoundException.class,
+        NotFoundException ex = Assertions.assertThrows(
+                NotFoundException.class,
                 () -> filmStorage.get(film1.getId())
         );
         Assertions.assertEquals(ex.getMessage(), "Ошибка получения фильма " + film1.getId() + "!");

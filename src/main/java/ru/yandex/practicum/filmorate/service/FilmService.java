@@ -1,27 +1,19 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.film.FilmIsNullException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
-
-    @Autowired
-    @Qualifier(value = "filmDbStorage")
-    private FilmStorage filmStorage;
-    @Autowired
-    @Qualifier("userDbStorage")
-    private UserStorage userStorage;
-    @Autowired
-    private DirectorDbStorage directorStorage;
+    private final FilmStorage filmStorage;
+    private final DirectorDbStorage directorStorage;
 
     public Film addFilm(Film film) {
         if (film != null) {
