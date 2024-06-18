@@ -11,6 +11,8 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,9 +26,9 @@ public class FilmController {
     private final FilmDtoMapper filmDtoTransfer;
 
     @PostMapping
-    public FilmDto addFilm(@Valid @RequestBody FilmDto filmDto) {
+    public FilmDto addFilm(@Valid @RequestBody final FilmDto filmDto) {
         Film film;
-        if (filmDto != null && !filmDto.getDuration().isNegative()) {
+        if (filmDto != null && filmDto.getDuration() >= 0) {
             film = filmService.addFilm(filmDtoTransfer.dtoToFilm(filmDto));
             log.info(String.format("Фильм %s успешно добавлен!", film.getName()));
         } else {
@@ -36,7 +38,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public FilmDto updateFilm(@Valid @RequestBody FilmDto filmDto) {
+    public FilmDto updateFilm(@Valid @RequestBody final FilmDto filmDto) {
         Film film = filmService.updateFilm(filmDtoTransfer.dtoToFilm(filmDto));
         log.info(String.format("Фильм %s успешно обновлён!", film.getName()));
         return filmDtoTransfer.filmToDto(film);
@@ -72,10 +74,50 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<FilmDto> getPopularFilms(@Positive(message = "Количество фильмов должно быть больше 0") @RequestParam(required = false, defaultValue = "10") int count) {
+    public List<FilmDto> getPopularFilms(
+            @Positive(message = "Количество фильмов должно быть больше 0") @RequestParam(required = false, defaultValue = "10") Integer count,
+            @RequestParam(required = false) Integer genreId, @RequestParam(required = false) Integer year) {
         log.info(String.format("Вывод %d популярных фильмов", count));
-        return filmService.getPopularFilms(count).stream()
+        return filmService.getPopularFilms(count, genreId, year).stream()
                 .map(filmDtoTransfer::filmToDto)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getDirectorFilms(@PathVariable long directorId, @RequestParam String sortBy) {
+        log.info("Поступил запрос на получение фильмов режиссера с id {}", directorId);
+        List<FilmDto> films = filmService.getDirectorFilms(directorId, sortBy).stream().map(filmDtoTransfer::filmToDto)
+                .collect(Collectors.toList());
+        log.debug("Фильмы получены {}", films);
+        return films;
+    }
+
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam(required = false) String query, @RequestParam(required = false) String by) {
+        List<String> byList = by != null ? Arrays.asList(by.split(",")) : Collections.emptyList();
+        log.info("Поступил запрос на получение фильмов по запросу: {}", byList);
+        if (query == null || query.trim().isEmpty()) {
+            log.info("Запрос пустой, возвращаем пустой список фильмов");
+            return Collections.emptyList();
+        }
+        List<FilmDto> films = filmService.searchFilms(query, byList)
+                .stream()
+                .map(filmDtoTransfer::filmToDto)
+                .collect(Collectors.toList());
+        log.info("Фильмы найдены {}", films);
+        return films;
+    }
+
+    @GetMapping("/common")
+    public List<Film> getCommonsFilms(
+            @RequestParam(value = "userId") Long userId,
+            @RequestParam(value = "friendId") Long friendId
+    ) {
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @DeleteMapping("/{filmId}")
+    public void deleteFilmById(@PathVariable Long filmId) {
+        filmService.deleteFilmById(filmId);
     }
 }

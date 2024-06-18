@@ -1,35 +1,32 @@
 package ru.yandex.practicum.filmorate;
 
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.rating.RatingStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
-@JdbcTest
+
+@SpringBootTest
 @AutoConfigureTestDatabase
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
-@ContextConfiguration(classes = {UserDbStorage.class, FilmDbStorage.class, GenreStorage.class, RatingStorage.class})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class FilmoRateApplicationTests {
 
-    private final UserDbStorage userStorage;
-    private final FilmDbStorage filmStorage;
+    @Autowired
+    private UserDbStorage userStorage;
+    @Autowired
+    private FilmDbStorage filmStorage;
 
     @Test
     public void findUserByIdTest() {
@@ -42,8 +39,8 @@ class FilmoRateApplicationTests {
     public void deleteUserTest() {
         User user1 = userStorage.add(createUser1());
         userStorage.delete(user1);
-        UserNotFoundException ex = Assertions.assertThrows(
-                UserNotFoundException.class,
+        NotFoundException ex = Assertions.assertThrows(
+                NotFoundException.class,
                 () -> userStorage.get(user1.getId())
         );
         Assertions.assertEquals(ex.getMessage(), "Пользователь с id " + user1.getId() + " не найден!");
@@ -107,8 +104,8 @@ class FilmoRateApplicationTests {
     public void deleteFilmTest() {
         Film film1 = filmStorage.add(createFilm1());
         filmStorage.delete(film1);
-        FilmNotFoundException ex = Assertions.assertThrows(
-                FilmNotFoundException.class,
+        NotFoundException ex = Assertions.assertThrows(
+                NotFoundException.class,
                 () -> filmStorage.get(film1.getId())
         );
         Assertions.assertEquals(ex.getMessage(), "Ошибка получения фильма " + film1.getId() + "!");
@@ -146,9 +143,9 @@ class FilmoRateApplicationTests {
         film.setName("Test Film");
         film.setDescription("Desc film");
         film.setReleaseDate(LocalDate.now());
-        film.setDuration(Duration.ofMinutes(120L));
+        film.setDuration(120L);
         film.setRatingId(1L);
-        film.setMpa(new Rating(1,"G"));
+        film.setMpa(new Rating(1, "G"));
         return film;
     }
 
@@ -157,7 +154,7 @@ class FilmoRateApplicationTests {
         film.setName("Test Film2");
         film.setDescription("Desc film2");
         film.setReleaseDate(LocalDate.now().minusDays(100));
-        film.setDuration(Duration.ofMinutes(120L));
+        film.setDuration(120L);
         film.setRatingId(1L);
         return film;
     }

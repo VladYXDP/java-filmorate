@@ -1,26 +1,19 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.film.FilmIsNullException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
-
-    @Autowired
-    @Qualifier(value = "filmDbStorage")
-    private FilmStorage filmStorage;
-    @Autowired
-    @Qualifier("userDbStorage")
-    private UserStorage userStorage;
+    private final FilmStorage filmStorage;
+    private final DirectorDbStorage directorStorage;
 
     public Film addFilm(Film film) {
         if (film != null) {
@@ -33,8 +26,7 @@ public class FilmService {
 
     public Film updateFilm(Film film) {
         if (film != null) {
-            filmStorage.update(film);
-            return film;
+            return filmStorage.update(film);
         } else {
             throw new FilmIsNullException("Ошибка обновления фильма!");
         }
@@ -56,10 +48,27 @@ public class FilmService {
         return filmStorage.get(id);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        return getAllFilms().stream()
-                .sorted(Comparator.comparing(Film::getLikesCount).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+    public List<Film> getPopularFilms(int count, Integer genreId, Integer year) {
+        return filmStorage.getPopularFilms(count, genreId, year);
+    }
+
+    public List<Film> getDirectorFilms(long directorId, String sortBy) {
+        directorStorage.getDirector(directorId);
+        return filmStorage.getDirectorFilms(directorId, sortBy);
+    }
+
+    public List<Film> searchFilms(String query, List<String> by) {
+        boolean byTitle = by.contains("title");
+        boolean byDirector = by.contains("director");
+
+        return filmStorage.searchFilms(query, byTitle, byDirector);
+    }
+
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
+    public void deleteFilmById(Long filmId) {
+        filmStorage.deleteFilmById(filmId);
     }
 }

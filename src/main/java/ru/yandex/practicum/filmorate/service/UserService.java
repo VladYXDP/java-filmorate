@@ -1,23 +1,32 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserIsNullException;
+import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.recommendations.RecommendDbStorage;
+import ru.yandex.practicum.filmorate.storage.recommendations.SlopeOneRecommender;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    @Qualifier("userDbStorage")
-    private UserStorage userStorage;
+    private final UserStorage userStorage;
+    private final FeedStorage feedStorage;
+    private final FilmStorage filmStorage;
+    private final RecommendDbStorage recommendDbStorage;
+    private final SlopeOneRecommender slopeOneRecommender;
 
     public User addUser(User user) {
         if (user != null) {
@@ -79,7 +88,25 @@ public class UserService {
         return friend;
     }
 
+    public List<Feed> getFeed(long userId) {
+        userStorage.get(userId);
+        return feedStorage.get(userId);
+    }
+
     public List<User> getAllUsers() {
         return userStorage.getAllUser();
+    }
+
+    public void deleteUserByID(Long userId) {
+        userStorage.deleteUserByID(userId);
+    }
+
+    public List<Film> recommendFilms(Long userId) {
+        Map<Long, Map<Long, Integer>> data = recommendDbStorage.getUserLikes();
+        //Строим матрицы различий и частот
+        slopeOneRecommender.buildMatrices(data);
+        //Получаем лайки конкретного пользователя
+        Map<Long, Integer> userRatings = data.get(userId);
+        return slopeOneRecommender.recommend(userRatings, filmStorage);
     }
 }

@@ -6,10 +6,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistException;
-import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Friends;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventTypeEnum;
+import ru.yandex.practicum.filmorate.model.enums.OperationEnum;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
+    private final FeedStorage feedStorage;
 
     private static final String INSERT_USER = "INSERT INTO users (email, name, birthday, login) VALUES (?,?,?,?)";
     private static final String DELETE_USER = "DELETE FROM users WHERE id = ?";
@@ -60,7 +65,7 @@ public class UserDbStorage implements UserStorage {
             return user;
         }
         throw new UserAlreadyExistException("Пользователь с email " + user.getEmail() + " и login " + user.getLogin() +
-                " уже существует");
+                                            " уже существует");
     }
 
     @Override
@@ -71,7 +76,7 @@ public class UserDbStorage implements UserStorage {
             jdbcTemplate.update(DELETE_USER, user.getId());
             return user;
         }
-        throw new UserNotFoundException("Ошибка удаления пользователя!");
+        throw new NotFoundException("Ошибка удаления пользователя!");
     }
 
     @Override
@@ -80,7 +85,7 @@ public class UserDbStorage implements UserStorage {
             jdbcTemplate.update(UPDATE_USER, user.getEmail(), user.getName(), user.getLogin(), user.getBirthday(), user.getId());
             return user;
         }
-        throw new UserNotFoundException("Ошибка обновления пользователя!");
+        throw new NotFoundException("Ошибка обновления пользователя!");
     }
 
 
@@ -97,13 +102,20 @@ public class UserDbStorage implements UserStorage {
             }
             return user;
         } else {
-            throw new UserNotFoundException("Пользователь с id " + id + " не найден!");
+            throw new NotFoundException("Пользователь с id " + id + " не найден!");
         }
     }
 
     @Override
     public List<User> getAllUser() {
         return jdbcTemplate.query(SELECT_ALL_USERS, this::getRowMapperUser);
+    }
+
+    @Override
+    public void deleteUserByID(Long userId) {
+        if (checkUserById(userId)) {
+            jdbcTemplate.update(DELETE_USER, userId);
+        }
     }
 
     public void addFriend(long userId, long friendId) {
@@ -116,24 +128,26 @@ public class UserDbStorage implements UserStorage {
                     stmt.setLong(2, friendId);
                     return stmt;
                 });
+                feedStorage.create(new Feed(userId, EventTypeEnum.FRIEND, OperationEnum.ADD, friendId));
             } else {
                 throw new RuntimeException("Заявка пользователя с id " + userId + " в друзья к пользователю с id "
-                        + friendId + "уже существует!");
+                                           + friendId + "уже существует!");
             }
         } else {
-            throw new UserNotFoundException("Для добавления в друзья пользователи не найдены!");
+            throw new NotFoundException("Для добавления в друзья пользователи не найдены!");
         }
     }
 
     public void removeFriend(long userId, long friendId) {
         if (checkUserById(userId) && checkUserById(friendId)) {
             jdbcTemplate.update(DELETE_BY_USER_AND_FRIEND, userId, friendId);
+            feedStorage.create(new Feed(userId, EventTypeEnum.FRIEND, OperationEnum.REMOVE, friendId));
         } else {
-            throw new UserNotFoundException("Для добавления в друзья пользователи не найдены!");
+            throw new NotFoundException("Для добавления в друзья пользователи не найдены!");
         }
     }
 
-    private boolean checkUserById(long id) {
+    public boolean checkUserById(long id) {
         return jdbcTemplate.queryForObject(SELECT_EXISTS_USER_BY_ID, Boolean.class, id);
     }
 
